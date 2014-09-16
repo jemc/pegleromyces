@@ -55,4 +55,8 @@ BasicSpec < Object {
       }
     }
   }
+  
+  [decorators]
+  
+  it: Decorator { }
 }
