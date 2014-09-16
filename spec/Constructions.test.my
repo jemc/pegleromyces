@@ -2,9 +2,75 @@
 BasicSpec {
   name: "Constructions"
   
-  constructions: Constructions { }
-  
   [tests]
   
-  it "exists":  assert(constructions)
+  specify "Character creates a single char instruction": {
+    construct = Constructions::Character.new(code:120)
+    assert_equal(construct.sequence, [
+      [:char, 120]
+    ])
+  }
+  
+  specify "CharacterString creates a string of char instructions": {
+    construct = Constructions::CharacterString.new(codes:[120,121,122])
+    assert_equal(construct.sequence, [
+      [:char, 120]
+      [:char, 121]
+      [:char, 122]
+    ])
+  }
+  
+  specify "PositivePredicate assembles choice, commit, fail instructions": {
+    a = Constructions::CharacterString.new(codes:[120,121,122])
+    construct = Constructions::PositivePredicate.new(inner:a)
+    assert_equal(construct.sequence, [
+      [:choice, 7] # ip+7 == L1
+      [:choice, 4] # ip+4 == L2
+      [:char, 120]
+      [:char, 121]
+      [:char, 122]
+      [:commit, 1] # ip+1 == L3 (L2)
+      [:fail]      # (L3)
+                   # (L1)
+    ])
+  }
+  
+  specify "OrderedChoice assembles choice and commit instructions": {
+    a = Constructions::CharacterString.new(codes:[110,111,112])
+    b = Constructions::CharacterString.new(codes:[120,121,122])
+    construct = Constructions::OrderedChoice.new(first:a, second:b)
+    assert_equal(construct.sequence, [
+      [:choice, 5] # ip+5 == L1
+      [:char, 110]
+      [:char, 111]
+      [:char, 112]
+      [:commit, 4] # ip+4 == L2
+      [:char, 120] # (L1)
+      [:char, 121]
+      [:char, 122]
+                   # (L2)
+    ])
+    
+    a = Constructions::CharacterString.new(codes:[110,111,112])
+    b = Constructions::CharacterString.new(codes:[120,121,122])
+    c = Constructions::CharacterString.new(codes:[130,131,132])
+    construct = Constructions::OrderedChoice.new(first:b, second:c)
+    construct = Constructions::OrderedChoice.new(first:a, second:construct)
+    assert_equal(construct.sequence, [
+      [:choice, 5] # ip+5 == L1
+      [:char, 110]
+      [:char, 111]
+      [:char, 112]
+      [:commit, 9] # ip+9 == L2
+      [:choice, 5] # ip+5 == L3; (L1)
+      [:char, 120]
+      [:char, 121]
+      [:char, 122]
+      [:commit, 4] # ip+4 == L2
+      [:char, 130] # (L3)
+      [:char, 131]
+      [:char, 132]
+                   # (L2)
+    ])
+  }
 }
