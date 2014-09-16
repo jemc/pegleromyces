@@ -15,6 +15,13 @@ Constructions < EmptyObject {
     sequence: codes.map |code| { [:char, code] }
   }
   
+  NegativePredicate < Base {
+    var inner
+    sequence: {
+      a = inner.sequence
+      [[:choice, a.count+2], *a, [:fail_twice]]
+    }
+  }
   PositivePredicate < Base {
     var inner
     sequence: {
@@ -31,6 +38,10 @@ Constructions < EmptyObject {
       [[:choice, a.count+2], *a, [:commit, b.count+1], *b]
     }
   }
+  Concatenation < Base {
+    var first, var second
+    sequence: [*first.sequence, *second.sequence]
+  }
   
   
   ##
@@ -44,5 +55,8 @@ Constructions < EmptyObject {
   }
   Patterns::OrderedChoice   << {
     construct:OrderedChoice.new(first:first.construct, second:second.construct)
+  }
+  Patterns::Concatenation   << {
+    construct:Concatenation.new(first:first.construct, second:second.construct)
   }
 }
