@@ -59,4 +59,5 @@ BasicSpec < Object {
   [decorators]
   
   it: Decorator { }
+  specify: Decorator { }
 }
