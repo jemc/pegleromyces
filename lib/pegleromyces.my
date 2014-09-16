@@ -1,3 +1,4 @@
 
 import 'pegleromyces/Pattern.my'
 import 'pegleromyces/Machine.my'
+import 'pegleromyces/Program.my'

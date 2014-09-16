@@ -1,0 +1,5 @@
+
+Program < Object {
+  # The indexed list of instructions comprising the entire program
+  var sequence: []
+}

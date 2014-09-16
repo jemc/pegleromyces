@@ -1,0 +1,10 @@
+
+BasicSpec {
+  name: "Program"
+  
+  new_program: Program { }
+  
+  [tests]
+  
+  it "starts with an empty sequence":  assert(new_program.sequence.empty?)
+}
