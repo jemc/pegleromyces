@@ -1,8 +1,62 @@
 
 Pattern < EmptyObject {
   
-  Base < BasicObject {
-    var name: parent_meme.name
+  ##
+  # Basic types of patterns.
+  
+  Base < BasicObject { var name: parent_meme.name }
+  
+  NegativePredicate < Base { var pattern }
+  PositivePredicate < Base { var pattern }
+  OneOrMore         < Base { var pattern }
+  ZeroOrOne         < Base { var pattern }
+  ZeroOrMore        < Base { var pattern }
+  OrderedChoice     < Base { var first, var second }
+  Concatenation     < Base { var first, var second }
+  
+  ##
+  # Operator overloading for combining and modifying patterns.
+  #
+  # Each operation returns a new Pattern object composed of the operands
+  # so that complex grammars can be specified with relatively succint syntax.
+  
+  Base << {
+    "!":         NegativePredicate .new(pattern:self)
+    "/": |other| OrderedChoice     .new(first:self, second:other)
+    "+": |other=false|
+      other && Concatenation  .new(first:self, second:other)
+            || OneOrMore      .new(pattern:self)
+    "-": |other=false|
+      other && ErrorCondition .new() # TODO: add exception handling to Myco
+            || ZeroOrOne      .new(pattern:self)
+    "*": |other=false|
+      other && ErrorCondition .new()
+            || ZeroOrMore     .new(pattern:self)
   }
   
+  NegativePredicate << {
+    # Invert the polarity of the predicate instead of nesting the predicate
+    "!": PositivePredicate.new(pattern:pattern)
+  }
+  
+  PositivePredicate << {
+    # Invert the polarity of the predicate instead of nesting the predicate
+    "!": NegativePredicate.new(pattern:pattern)
+  }
+  
+  OrderedChoice << {
+    # Build a right-associative tree if the first operand of another choice
+    "/": |other| {
+      self.second = OrderedChoice.new(first:self.second, second:other)
+      self
+    }
+  }
+  
+  Concatenation << {
+    # Build a right-associative tree if the first operand of another choice
+    "+": |other| {
+      self.second = Concatenation.new(first:self.second, second:other)
+      self
+    }
+  }
 }

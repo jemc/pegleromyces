@@ -2,11 +2,95 @@
 BasicSpec {
   name: "Patterns"
   
-  make_pattern: Pattern::Base { }
+  new_pattern: Pattern::Base { }
   
   [tests]
   
-  "knows its name": {
-    assert_equal(make_pattern.name, :make_pattern)
+  it "knows its name": {
+    assert_equal(new_pattern.name, :new_pattern)
+  }
+  
+  it "creates a NegativePredicate with the '!' unary operator": {
+    a = new_pattern
+    b = !a
+    assert_is_a(b, Pattern::NegativePredicate)
+    assert_equal(b.pattern, a)
+  }
+  
+  it "creates a PositivePredicate with two uses of the '!' unary operator": {
+    a = new_pattern
+    b = !!a
+    assert_is_a(b, Pattern::PositivePredicate)
+    assert_equal(b.pattern, a)
+  }
+  
+  it "creates a NegativePredicate with three uses of the '!' unary operator": {
+    a = new_pattern
+    b = !!!a
+    assert_is_a(b, Pattern::NegativePredicate)
+    assert_equal(b.pattern, a)
+  }
+  
+  it "creates an OrderedChoice with the '/' operator": {
+    a = new_pattern
+    b = new_pattern
+    c = a / b
+    assert_is_a(c, Pattern::OrderedChoice)
+    assert_equal(c.first, a)
+    assert_equal(c.second, b)
+  }
+  
+  it "interprets a series of OrderedChoices in a right-associative tree": {
+    a = new_pattern
+    b = new_pattern
+    c = new_pattern
+    d = a / b / c
+    assert_is_a(d, Pattern::OrderedChoice)
+    assert_is_a(d.second, Pattern::OrderedChoice)
+    assert_equal(d.first, a)
+    assert_equal(d.second.first, b)
+    assert_equal(d.second.second, c)
+  }
+  
+  it "creates a Concatenation with the '+' operator": {
+    a = new_pattern
+    b = new_pattern
+    c = a + b
+    assert_is_a(c, Pattern::Concatenation)
+    assert_equal(c.first, a)
+    assert_equal(c.second, b)
+  }
+  
+  it "interprets a series of Concatenations in a right-associative tree": {
+    a = new_pattern
+    b = new_pattern
+    c = new_pattern
+    d = a + b + c
+    assert_is_a(d, Pattern::Concatenation)
+    assert_is_a(d.second, Pattern::Concatenation)
+    assert_equal(d.first, a)
+    assert_equal(d.second.first, b)
+    assert_equal(d.second.second, c)
+  }
+  
+  it "creates a OneOrMore with the '+' operator used as a 'suffix' call": {
+    a = new_pattern
+    b = a.+
+    assert_is_a(b, Pattern::OneOrMore)
+    assert_equal(b.pattern, a)
+  }
+  
+  it "creates a ZeroOrOne with the '-' operator used as a 'suffix' call": {
+    a = new_pattern
+    b = a.-
+    assert_is_a(b, Pattern::ZeroOrOne)
+    assert_equal(b.pattern, a)
+  }
+  
+  it "creates a ZeroOrMore with the '*' operator used as a 'suffix' call": {
+    a = new_pattern
+    b = a.*
+    assert_is_a(b, Pattern::ZeroOrMore)
+    assert_equal(b.pattern, a)
   }
 }
