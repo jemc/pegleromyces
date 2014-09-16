@@ -1,5 +1,9 @@
 
-Program < Object {
+Program < BasicObject {
   # The indexed list of instructions comprising the entire program
   var sequence: []
+  
+  # Call a method to indicate an instruction to push onto the sequence
+  method_missing: |name, *args|
+    sequence.push((null;[name, *args])) # TODO: use inline splat when fixed in Myco
 }

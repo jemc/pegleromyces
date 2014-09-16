@@ -7,4 +7,16 @@ BasicSpec {
   [tests]
   
   it "starts with an empty sequence":  assert(new_program.sequence.empty?)
+  
+  it "can push instructions onto the sequence with method_missing": {
+    program = new_program
+    program.foo
+    program.bar(1,2,3)
+    program.baz(null)
+    assert_equal(program.sequence, [
+      [:foo]
+      [:bar,1,2,3]
+      [:baz,null]
+    ])
+  }
 }
