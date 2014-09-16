@@ -5,3 +5,4 @@ import '../lib/pegleromyces.my'
 
 
 import 'patterns.test.my'
+import 'Machine.test.my'

@@ -1,0 +1,17 @@
+
+Machine < Object {
+  # The index of the next program instruction, or null indicating fail condition
+  var ip: 0
+  
+  # The current index into the subject string
+  var idx: 0
+  
+  # A list of stack entries, each of which is either a:
+  #   return_address (the instruction index to return to)
+  # or a list containing:
+  #   [fail_address, current_idx, current_capture_list] (a pending alternative)
+  var stack: []
+  
+  # TODO
+  var capture_list
+}
