@@ -1,0 +1,11 @@
+
+BasicSpec {
+  
+  make_pattern: Pattern { }
+  
+  [tests]
+  
+  "knows its name": {
+    assert_equal(make_pattern.name, :make_pattern)
+  }
+}
