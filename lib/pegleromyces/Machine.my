@@ -12,6 +12,7 @@ Machine < Object, Instructions {
   #   [fail_address, current_idx, current_capture_list] (a pending alternative)
   var stack: []
   
-  # TODO
-  var capture_list
+  # A list of tuples, each containing:
+  #   [idx, captor] (the index into the subject and the captor to notify)
+  var captures: []
 }

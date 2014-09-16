@@ -6,5 +6,5 @@ BasicSpec {
   
   [tests]
   
-  it "has no memes yet":  assert(instructions.component.memes.empty?)
+  it "exists":  assert(instructions)
 }
