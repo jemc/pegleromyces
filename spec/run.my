@@ -5,6 +5,7 @@ import '../lib/pegleromyces.my'
 
 
 import 'Patterns.test.my'
+import 'Constructions.test.my'
+import 'Program.test.my'
 import 'Instructions.test.my'
 import 'Machine.test.my'
-import 'Program.test.my'

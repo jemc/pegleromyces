@@ -1,0 +1,10 @@
+
+BasicSpec {
+  name: "Constructions"
+  
+  constructions: Constructions { }
+  
+  [tests]
+  
+  it "exists":  assert(constructions)
+}
