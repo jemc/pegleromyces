@@ -6,6 +6,12 @@ Pattern < EmptyObject {
   
   Base < BasicObject { var name: parent_meme.name }
   
+  AnyCharacter      < Base { }
+  Character         < Base { var code }
+  CharacterString   < Base { var codes } # Concatenation for Characters
+  CharacterSet      < Base { var codes } # OrderedChoice for Characters
+  CharacterRange    < Base { var start, var end }
+  
   NegativePredicate < Base { var pattern }
   PositivePredicate < Base { var pattern }
   OneOrMore         < Base { var pattern }
@@ -13,6 +19,17 @@ Pattern < EmptyObject {
   ZeroOrMore        < Base { var pattern }
   OrderedChoice     < Base { var first, var second }
   Concatenation     < Base { var first, var second }
+  
+  ##
+  # Shorthand methods for creating primitive patterns
+  
+  ShorthandMethods < EmptyObject {
+    any:                   AnyCharacter.new
+    char:  |character|        Character.new(code:character.ord)
+    str:   |string|     CharacterString.new(codes:string.each_char.map(&:ord))
+    set:   |string|        CharacterSet.new(codes:string.each_char.map(&:ord))
+    range: |start, end|  CharacterRange.new(start:start.ord, end:end.ord)
+  }
   
   ##
   # Operator overloading for combining and modifying patterns.

@@ -3,6 +3,7 @@ BasicSpec {
   name: "Patterns"
   
   new_pattern: Pattern::Base { }
+  var shorthand: Pattern::ShorthandMethods { }
   
   [tests]
   
@@ -92,5 +93,34 @@ BasicSpec {
     b = a.*
     assert_is_a(b, Pattern::ZeroOrMore)
     assert_equal(b.pattern, a)
+  }
+  
+  it "creates an AnyCharacter with the 'any' shorthand method": {
+    a = shorthand.any
+    assert_is_a(a, Pattern::AnyCharacter)
+  }
+  
+  it "creates a Character with the 'char' shorthand method": {
+    a = shorthand.char('x')
+    assert_is_a(a, Pattern::Character)
+    assert_equal(a.code, 120)
+  }
+  
+  it "creates a CharacterString with the 'str' shorthand method": {
+    a = shorthand.str('xyz')
+    assert_is_a(a, Pattern::CharacterString)
+    assert_equal(a.codes, [120,121,122])
+  }
+  
+  it "creates a CharacterSet with the 'set' shorthand method": {
+    a = shorthand.set('xyz')
+    assert_is_a(a, Pattern::CharacterSet)
+    assert_equal(a.codes, [120,121,122])
+  }
+  
+  it "creates a CharacterRange with the 'range' shorthand method": {
+    a = shorthand.range('x','z')
+    assert_equal(a.start, 120)
+    assert_equal(a.end,   122)
   }
 }
