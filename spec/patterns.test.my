@@ -1,7 +1,8 @@
 
 BasicSpec {
+  name: "Patterns"
   
-  make_pattern: Pattern { }
+  make_pattern: Pattern::Base { }
   
   [tests]
   

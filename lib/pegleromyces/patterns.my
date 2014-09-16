@@ -1,4 +1,8 @@
 
-Pattern < BasicObject {
+Pattern < EmptyObject {
+  
+  Base < BasicObject {
+    var name: parent_meme.name
+  }
   
 }
