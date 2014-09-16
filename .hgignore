@@ -1,0 +1,4 @@
+^\.git$
+^\.ruby-version$
+\.sublime-(workspace|project)$
+^run.sh
