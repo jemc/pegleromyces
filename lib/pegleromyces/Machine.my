@@ -1,5 +1,5 @@
 
-Machine < Object {
+Machine < Object, Instructions {
   # The index of the next program instruction, or null indicating fail condition
   var ip: 0
   

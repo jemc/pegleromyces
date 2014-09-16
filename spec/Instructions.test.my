@@ -1,0 +1,10 @@
+
+BasicSpec {
+  name: "Instructions"
+  
+  instructions: Instructions { }
+  
+  [tests]
+  
+  it "has no memes yet":  assert(instructions.component.memes.empty?)
+}
