@@ -1,12 +1,15 @@
 
 Instructions < EmptyObject {
   
+  ##
+  # Basic Instructions
+  
   # Test the character pointed to by the current index into the subject.
   # Continue if the character |code| is equal, otherwise fail.
   char: |code|
     (subject.at(idx) == code)
       && (self.ip = ip + 1; self.idx = idx + 1)
-      || (self.ip = null)
+      || (self.ip = null) # failure
   
   # Move the instruction pointer forward by |label| instructions.
   jump: |label|
@@ -49,4 +52,63 @@ Instructions < EmptyObject {
         self.idx      = entry.pop # and restore it to the relevant variable
         self.ip       = entry.pop # (popping implies reverse order)
       )
+  
+  # Signal a successful match at the end of the complete pattern
+  end:
+    self.ip = true
+  
+  ##
+  # Optimized Instructions
+  #
+  # These instructions could be expressed in terms of the Basic Instructions,
+  # but are more efficiently executed if given special implementations.
+  
+  # (Choice where each choice 'leaf' is a char)
+  charset: TODO
+  
+  # (Kleene star applied to a charset)
+  span: TODO
+  
+  # Match any character, |count| number of times.
+  any: |count|
+    (self.idx + count < subject.count)
+      && (self.ip = null) # failure
+      || (
+        self.ip = ip + 1
+        self.idx = idx + count
+      )
+  
+  # Update the state for the backtrack entry on the top of the stack
+  # but don't change the fail address; then jump to |label|.
+  partial_commit: |label| {
+    entry = stack.pop
+    stack.push([entry.first, idx, captures])
+    self.ip = ip + label
+  }
+  
+  # Pop the backtrack entry and restore state but jump to |label|
+  # instead of jumping to the popped fail address.
+  back_commit: |label| {
+    entry = stack.pop
+    self.captures = entry.pop
+    self.idx      = entry.pop
+    self.ip = ip + label
+  }
+  
+  # Pop a backtrack entry off the stack and discard it, then fail.
+  fail_twice: {
+    self.stack.empty?
+      && ErrorCondition.new
+      || stack.pop
+    
+    self.stack.empty?
+      && ErrorCondition.new
+      || (
+        entry = stack.pop.to_a
+        self.captures = entry.pop # Pop each entry item
+        self.idx      = entry.pop # and restore it to the relevant variable
+        self.ip       = entry.pop # (popping implies reverse order)
+      )
+  }
+  
 }
