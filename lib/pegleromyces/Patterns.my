@@ -1,5 +1,5 @@
 
-Pattern < EmptyObject {
+Patterns < EmptyObject {
   
   ##
   # Basic types of patterns.

@@ -1,9 +1,9 @@
 
 BasicSpec {
-  name: "Pattern"
+  name: "Patterns"
   
-  new_pattern: Pattern::Base { }
-  var shorthand: Pattern::ShorthandMethods { }
+  new_pattern: Patterns::Base { }
+  var shorthand: Patterns::ShorthandMethods { }
   
   [tests]
   
@@ -14,21 +14,21 @@ BasicSpec {
   it "creates a NegativePredicate with the '!' unary operator": {
     a = new_pattern
     b = !a
-    assert_is_a(b, Pattern::NegativePredicate)
+    assert_is_a(b, Patterns::NegativePredicate)
     assert_equal(b.pattern, a)
   }
   
   it "creates a PositivePredicate with two uses of the '!' unary operator": {
     a = new_pattern
     b = !!a
-    assert_is_a(b, Pattern::PositivePredicate)
+    assert_is_a(b, Patterns::PositivePredicate)
     assert_equal(b.pattern, a)
   }
   
   it "creates a NegativePredicate with three uses of the '!' unary operator": {
     a = new_pattern
     b = !!!a
-    assert_is_a(b, Pattern::NegativePredicate)
+    assert_is_a(b, Patterns::NegativePredicate)
     assert_equal(b.pattern, a)
   }
   
@@ -36,7 +36,7 @@ BasicSpec {
     a = new_pattern
     b = new_pattern
     c = a / b
-    assert_is_a(c, Pattern::OrderedChoice)
+    assert_is_a(c, Patterns::OrderedChoice)
     assert_equal(c.first, a)
     assert_equal(c.second, b)
   }
@@ -46,8 +46,8 @@ BasicSpec {
     b = new_pattern
     c = new_pattern
     d = a / b / c
-    assert_is_a(d, Pattern::OrderedChoice)
-    assert_is_a(d.second, Pattern::OrderedChoice)
+    assert_is_a(d, Patterns::OrderedChoice)
+    assert_is_a(d.second, Patterns::OrderedChoice)
     assert_equal(d.first, a)
     assert_equal(d.second.first, b)
     assert_equal(d.second.second, c)
@@ -57,7 +57,7 @@ BasicSpec {
     a = new_pattern
     b = new_pattern
     c = a + b
-    assert_is_a(c, Pattern::Concatenation)
+    assert_is_a(c, Patterns::Concatenation)
     assert_equal(c.first, a)
     assert_equal(c.second, b)
   }
@@ -67,8 +67,8 @@ BasicSpec {
     b = new_pattern
     c = new_pattern
     d = a + b + c
-    assert_is_a(d, Pattern::Concatenation)
-    assert_is_a(d.second, Pattern::Concatenation)
+    assert_is_a(d, Patterns::Concatenation)
+    assert_is_a(d.second, Patterns::Concatenation)
     assert_equal(d.first, a)
     assert_equal(d.second.first, b)
     assert_equal(d.second.second, c)
@@ -77,44 +77,44 @@ BasicSpec {
   it "creates a OneOrMore with the '+' operator used as a 'suffix' call": {
     a = new_pattern
     b = a.+
-    assert_is_a(b, Pattern::OneOrMore)
+    assert_is_a(b, Patterns::OneOrMore)
     assert_equal(b.pattern, a)
   }
   
   it "creates a ZeroOrOne with the '-' operator used as a 'suffix' call": {
     a = new_pattern
     b = a.-
-    assert_is_a(b, Pattern::ZeroOrOne)
+    assert_is_a(b, Patterns::ZeroOrOne)
     assert_equal(b.pattern, a)
   }
   
   it "creates a ZeroOrMore with the '*' operator used as a 'suffix' call": {
     a = new_pattern
     b = a.*
-    assert_is_a(b, Pattern::ZeroOrMore)
+    assert_is_a(b, Patterns::ZeroOrMore)
     assert_equal(b.pattern, a)
   }
   
   it "creates an AnyCharacter with the 'any' shorthand method": {
     a = shorthand.any
-    assert_is_a(a, Pattern::AnyCharacter)
+    assert_is_a(a, Patterns::AnyCharacter)
   }
   
   it "creates a Character with the 'char' shorthand method": {
     a = shorthand.char('x')
-    assert_is_a(a, Pattern::Character)
+    assert_is_a(a, Patterns::Character)
     assert_equal(a.code, 120)
   }
   
   it "creates a CharacterString with the 'str' shorthand method": {
     a = shorthand.str('xyz')
-    assert_is_a(a, Pattern::CharacterString)
+    assert_is_a(a, Patterns::CharacterString)
     assert_equal(a.codes, [120,121,122])
   }
   
   it "creates a CharacterSet with the 'set' shorthand method": {
     a = shorthand.set('xyz')
-    assert_is_a(a, Pattern::CharacterSet)
+    assert_is_a(a, Patterns::CharacterSet)
     assert_equal(a.codes, [120,121,122])
   }
   
