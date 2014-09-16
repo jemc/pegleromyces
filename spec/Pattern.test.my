@@ -1,6 +1,6 @@
 
 BasicSpec {
-  name: "Patterns"
+  name: "Pattern"
   
   new_pattern: Pattern::Base { }
   var shorthand: Pattern::ShorthandMethods { }

@@ -4,5 +4,5 @@ import 'BasicSpec.my'
 import '../lib/pegleromyces.my'
 
 
-import 'patterns.test.my'
+import 'Pattern.test.my'
 import 'Machine.test.my'
