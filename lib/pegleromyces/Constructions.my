@@ -2,61 +2,105 @@
 Constructions < EmptyObject {
   
   ##
-  # Basic types of constructions.
+  # Basic types of Constructions.
   
   Base < BasicObject { }
+  UnaryBase  < Base { var inner }
+  BinaryBase < Base { var first, var second }
   
-  Character < Base {
-    var code
+  Character         < Base { var code }
+  CharacterString   < Base { var codes }
+  
+  NegativePredicate < UnaryBase { }
+  PositivePredicate < UnaryBase { }
+  OneOrMore         < UnaryBase { }
+  ZeroOrOne         < UnaryBase { }
+  ZeroOrMore        < UnaryBase { }
+  OrderedChoice     < BinaryBase { }
+  Concatenation     < BinaryBase { }
+  
+  ##
+  # Bindings of Patterns to Constructions.
+  
+  Patterns::UnaryBase << {
+    construct: construct_type.new(inner:inner.construct)
+  }
+  
+  Patterns::BinaryBase << {
+    construct: construct_type.new(first:first.construct,second:second.construct)
+  }
+  
+  Patterns::Character         << { construct: Character.new(code:code) }
+  Patterns::CharacterString   << { construct: CharacterString.new(codes:codes) }
+  
+  Patterns::NegativePredicate << { construct_type: NegativePredicate }
+  Patterns::PositivePredicate << { construct_type: PositivePredicate }
+  Patterns::OneOrMore         << { construct_type: OneOrMore }
+  Patterns::ZeroOrOne         << { construct_type: ZeroOrOne }
+  Patterns::ZeroOrMore        << { construct_type: ZeroOrMore }
+  Patterns::OrderedChoice     << { construct_type: OrderedChoice }
+  Patterns::Concatenation     << { construct_type: Concatenation }
+  
+  ##
+  # The Instruction sequence that comprises each Construction.
+  
+  Character << {
     sequence: [[:char, code]]
   }
-  CharacterString < Base {
-    var codes
+  
+  CharacterString << {
     sequence: codes.map |code| { [:char, code] }
   }
   
-  NegativePredicate < Base {
-    var inner
+  
+  NegativePredicate << {
     sequence: {
       a = inner.sequence
       [[:choice, a.count+2], *a, [:fail_twice]]
     }
   }
-  PositivePredicate < Base {
-    var inner
+  
+  PositivePredicate << {
     sequence: {
       a = inner.sequence
       count = a.count
       [[:choice, count+4], [:choice, count+1], *a, [:commit, 1], [:fail]]
     }
   }
-  OrderedChoice < Base {
-    var first, var second
+  
+  OneOrMore << {
+    sequence: {
+      one = inner.sequence
+      or_more = ZeroOrMore.new(inner:inner).sequence
+      [*one, *or_more]
+    }
+  }
+  
+  ZeroOrOne << {
+    sequence: {
+      a = inner.sequence
+      [[:choice, a.count+2], *a, [:commit, 1]]
+    }
+  }
+  
+  ZeroOrMore << {
+    sequence: {
+      a = inner.sequence
+      count = a.count
+      [[:choice, count+2], *a, [:partial_commit, count*-1]]
+    }
+  }
+  
+  OrderedChoice << {
     sequence: {
       a = first.sequence
       b = second.sequence
       [[:choice, a.count+2], *a, [:commit, b.count+1], *b]
     }
   }
-  Concatenation < Base {
-    var first, var second
+  
+  Concatenation << {
     sequence: [*first.sequence, *second.sequence]
   }
   
-  
-  ##
-  # Bindings of patterns to constructions.
-  
-  Patterns::Character         << { construct:Character.new(code:code) }
-  Patterns::CharacterString   << { construct:CharacterString.new(codes:codes) }
-  
-  Patterns::PositivePredicate << {
-    construct:PositivePredicate.new(inner:pattern.construct)
-  }
-  Patterns::OrderedChoice   << {
-    construct:OrderedChoice.new(first:first.construct, second:second.construct)
-  }
-  Patterns::Concatenation   << {
-    construct:Concatenation.new(first:first.construct, second:second.construct)
-  }
 }

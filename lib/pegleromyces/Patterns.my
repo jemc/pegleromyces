@@ -5,6 +5,8 @@ Patterns < EmptyObject {
   # Basic types of patterns.
   
   Base < BasicObject { var name: parent_meme.name }
+  UnaryBase  < Base { var inner }
+  BinaryBase < Base { var first, var second }
   
   AnyCharacter      < Base { }
   Character         < Base { var code }
@@ -12,13 +14,13 @@ Patterns < EmptyObject {
   CharacterSet      < Base { var codes } # OrderedChoice for Characters
   CharacterRange    < Base { var start, var end }
   
-  NegativePredicate < Base { var pattern }
-  PositivePredicate < Base { var pattern }
-  OneOrMore         < Base { var pattern }
-  ZeroOrOne         < Base { var pattern }
-  ZeroOrMore        < Base { var pattern }
-  OrderedChoice     < Base { var first, var second }
-  Concatenation     < Base { var first, var second }
+  NegativePredicate < UnaryBase { }
+  PositivePredicate < UnaryBase { }
+  OneOrMore         < UnaryBase { }
+  ZeroOrOne         < UnaryBase { }
+  ZeroOrMore        < UnaryBase { }
+  OrderedChoice     < BinaryBase { }
+  Concatenation     < BinaryBase { }
   
   ##
   # Shorthand methods for creating primitive patterns
@@ -38,27 +40,27 @@ Patterns < EmptyObject {
   # so that complex grammars can be specified with relatively succint syntax.
   
   Base << {
-    "!":         NegativePredicate .new(pattern:self)
+    "!":         NegativePredicate .new(inner:self)
     "/": |other| OrderedChoice     .new(first:self, second:other)
     "+": |other=false|
       other && Concatenation  .new(first:self, second:other)
-            || OneOrMore      .new(pattern:self)
+            || OneOrMore      .new(inner:self)
     "-": |other=false|
       other && ErrorCondition .new() # TODO: add exception handling to Myco
-            || ZeroOrOne      .new(pattern:self)
+            || ZeroOrOne      .new(inner:self)
     "*": |other=false|
       other && ErrorCondition .new()
-            || ZeroOrMore     .new(pattern:self)
+            || ZeroOrMore     .new(inner:self)
   }
   
   NegativePredicate << {
     # Invert the polarity of the predicate instead of nesting the predicate
-    "!": PositivePredicate.new(pattern:pattern)
+    "!": PositivePredicate.new(inner:inner)
   }
   
   PositivePredicate << {
     # Invert the polarity of the predicate instead of nesting the predicate
-    "!": NegativePredicate.new(pattern:pattern)
+    "!": NegativePredicate.new(inner:inner)
   }
   
   OrderedChoice << {

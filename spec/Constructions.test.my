@@ -46,6 +46,45 @@ BasicSpec {
     ])             # (L1)
   }
   
+  specify "OneOrMore assembles UNOPTIMIZED instructions": {
+    a = Constructions::CharacterString.new(codes:[120,121,122])
+    construct = Constructions::OneOrMore.new(inner:a)
+    assert_equal(construct.sequence, [
+      [:char, 120] # TODO: optimize and eliminate the double specification here
+      [:char, 121]
+      [:char, 122]
+      [:choice, 5] # ip+5 == L2
+      [:char, 120] # (L1)
+      [:char, 121]
+      [:char, 122]
+      [:partial_commit, -3] # ip-3 == L1
+    ])             # (L2)
+  }
+  
+  specify "ZeroOrOne assembles choice and commit instructions": {
+    a = Constructions::CharacterString.new(codes:[120,121,122])
+    construct = Constructions::ZeroOrOne.new(inner:a)
+    assert_equal(construct.sequence, [
+      [:choice, 5] # ip+5 == L1
+      [:char, 120]
+      [:char, 121]
+      [:char, 122]
+      [:commit, 1] # ip+1 == L1
+    ])             # (L1)
+  }
+  
+  specify "ZeroOrMore assembles choice and partial_commit instructions": {
+    a = Constructions::CharacterString.new(codes:[120,121,122])
+    construct = Constructions::ZeroOrMore.new(inner:a)
+    assert_equal(construct.sequence, [
+      [:choice, 5] # ip+5 == L2
+      [:char, 120] # (L1)
+      [:char, 121]
+      [:char, 122]
+      [:partial_commit, -3] # ip-3 == L1
+    ])             # (L2)
+  }
+  
   specify "OrderedChoice assembles choice and commit instructions": {
     a = Constructions::CharacterString.new(codes:[110,111,112])
     b = Constructions::CharacterString.new(codes:[120,121,122])

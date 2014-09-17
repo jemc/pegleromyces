@@ -15,21 +15,21 @@ BasicSpec {
     a = new_pattern
     b = !a
     assert_is_a(b, Patterns::NegativePredicate)
-    assert_equal(b.pattern, a)
+    assert_equal(b.inner, a)
   }
   
   it "creates a PositivePredicate with two uses of the '!' unary operator": {
     a = new_pattern
     b = !!a
     assert_is_a(b, Patterns::PositivePredicate)
-    assert_equal(b.pattern, a)
+    assert_equal(b.inner, a)
   }
   
   it "creates a NegativePredicate with three uses of the '!' unary operator": {
     a = new_pattern
     b = !!!a
     assert_is_a(b, Patterns::NegativePredicate)
-    assert_equal(b.pattern, a)
+    assert_equal(b.inner, a)
   }
   
   it "creates an OrderedChoice with the '/' operator": {
@@ -78,21 +78,21 @@ BasicSpec {
     a = new_pattern
     b = a.+
     assert_is_a(b, Patterns::OneOrMore)
-    assert_equal(b.pattern, a)
+    assert_equal(b.inner, a)
   }
   
   it "creates a ZeroOrOne with the '-' operator used as a 'suffix' call": {
     a = new_pattern
     b = a.-
     assert_is_a(b, Patterns::ZeroOrOne)
-    assert_equal(b.pattern, a)
+    assert_equal(b.inner, a)
   }
   
   it "creates a ZeroOrMore with the '*' operator used as a 'suffix' call": {
     a = new_pattern
     b = a.*
     assert_is_a(b, Patterns::ZeroOrMore)
-    assert_equal(b.pattern, a)
+    assert_equal(b.inner, a)
   }
   
   it "creates an AnyCharacter with the 'any' shorthand method": {
