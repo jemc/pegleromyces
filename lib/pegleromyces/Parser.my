@@ -1,4 +1,22 @@
 
 Parser < BasicObject {
   
+  var grammar: Patterns::AnyCharacter.new.*
+  
+  var string: ""
+  
+  new_machine: Machine.new(
+    sequence: grammar.construct.sequence + [[:end]]
+    subject: string.each_char.map(&:ord)
+  )
+  
+  parse: |string=null| {
+    string && (self.string = string)
+    machine = new_machine
+    machine.execute
+    self.had_failure = machine.had_failure
+    self
+  }
+  
+  var had_failure
 }

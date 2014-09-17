@@ -6,5 +6,7 @@ BasicSpec {
   
   [tests]
   
-  it "exists": assert(new_parser)
+  it "starts with a grammar that matches any string": {
+    refute(new_parser.parse("xyz").had_failure)
+  }
 }
