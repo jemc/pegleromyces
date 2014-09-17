@@ -24,8 +24,6 @@ Machine < Object, Instructions {
   
   
   # Execute the given instruction sequence over the given subject
-  # TODO: test
-  # TODO: replace tail call with loop
   execute:
-    ip && (send(*sequence.at(ip)); execute)
+    loop { ip || break; send(*sequence.at(ip)) }
 }
