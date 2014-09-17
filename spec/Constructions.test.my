@@ -4,6 +4,13 @@ BasicSpec {
   
   [tests]
   
+  specify "AnyCharacter creates a single any instruction": {
+    construct = Constructions::AnyCharacter.new
+    assert_equal(construct.sequence, [
+      [:any, 1]
+    ])
+  }
+  
   specify "Character creates a single char instruction": {
     construct = Constructions::Character.new(code:120)
     assert_equal(construct.sequence, [
@@ -17,6 +24,21 @@ BasicSpec {
       [:char, 120]
       [:char, 121]
       [:char, 122]
+    ])
+  }
+  
+  specify "CharacterSet creates a single charset instruction": {
+    construct = Constructions::CharacterSet.new(codes:[120,121,122])
+    expected_table = [120,121,122].map |code| { [code,true] }.to_h
+    assert_equal(construct.sequence, [
+      [:charset, expected_table]
+    ])
+  }
+  
+  specify "CharacterRange creates a single charrange instruction": {
+    construct = Constructions::CharacterRange.new(start:120, end:122)
+    assert_equal(construct.sequence, [
+      [:charrange, 120, 122]
     ])
   }
   

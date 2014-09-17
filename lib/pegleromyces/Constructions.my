@@ -2,14 +2,17 @@
 Constructions < EmptyObject {
   
   ##
-  # Basic types of Constructions.
+  # Basic types of constructions.
   
   Base < BasicObject { }
   UnaryBase  < Base { var inner }
   BinaryBase < Base { var first, var second }
   
+  AnyCharacter      < Base { var count }
   Character         < Base { var code }
   CharacterString   < Base { var codes }
+  CharacterSet      < Base { var codes }
+  CharacterRange    < Base { var start, var end }
   
   NegativePredicate < UnaryBase { }
   PositivePredicate < UnaryBase { }
@@ -20,7 +23,7 @@ Constructions < EmptyObject {
   Concatenation     < BinaryBase { }
   
   ##
-  # Bindings of Patterns to Constructions.
+  # Bindings of patterns to constructions.
   
   Patterns::UnaryBase << {
     construct: construct_type.new(inner:inner.construct)
@@ -30,8 +33,12 @@ Constructions < EmptyObject {
     construct: construct_type.new(first:first.construct,second:second.construct)
   }
   
-  Patterns::Character         << { construct: Character.new(code:code) }
+  Patterns::AnyCharacter      << { construct: AnyCharacter.new }
+  Patterns::Character         << { construct: Character      .new(code:code) }
   Patterns::CharacterString   << { construct: CharacterString.new(codes:codes) }
+  Patterns::CharacterSet      << { construct: CharacterSet   .new(codes:codes) }
+  Patterns::CharacterRange    << { construct: CharacterRange .new(start:start
+                                                                    end:end) }
   
   Patterns::NegativePredicate << { construct_type: NegativePredicate }
   Patterns::PositivePredicate << { construct_type: PositivePredicate }
@@ -42,16 +49,14 @@ Constructions < EmptyObject {
   Patterns::Concatenation     << { construct_type: Concatenation }
   
   ##
-  # The Instruction sequence that comprises each Construction.
+  # The instruction sequence generator for each construction.
   
-  Character << {
-    sequence: [[:char, code]]
-  }
-  
-  CharacterString << {
-    sequence: codes.map |code| { [:char, code] }
-  }
-  
+  AnyCharacter    << { sequence: [[:any, 1]] }
+  Character       << { sequence: [[:char, code]] }
+  CharacterString << { sequence: codes.map |code| { [:char, code] } }
+  CharacterSet    << { sequence: [[:charset, table]]
+                          table: codes.map |code| { [code, true] }.to_h }
+  CharacterRange  << { sequence: [[:charrange, start, end]] }
   
   NegativePredicate << {
     sequence: {

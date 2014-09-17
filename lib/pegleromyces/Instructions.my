@@ -63,8 +63,17 @@ Instructions < EmptyObject {
   # These instructions could be expressed in terms of the Basic Instructions,
   # but are more efficiently executed if given special implementations.
   
-  # (Choice where each choice 'leaf' is a char)
-  charset: TODO
+  # Like char, but accept any char whose code is a valid key in |table|
+  charset: |table|
+    table.key?(subject.at(idx))
+      && (self.ip = ip + 1; self.idx = idx + 1)
+      || (self.ip = null) # failure
+  
+  # Like char, but accept any char whose code is between |start| and |end|
+  charrange: |start, end|
+    (code=subject.at(idx); code>=start && code<=end)
+      && (self.ip = ip + 1; self.idx = idx + 1)
+      || (self.ip = null) # failure
   
   # (Kleene star applied to a charset)
   span: TODO
