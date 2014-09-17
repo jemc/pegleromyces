@@ -107,6 +107,15 @@ BasicSpec {
     ])             # (L2)
   }
   
+  specify "ZeroOrMore<CharacterSet> creates a single span instruction": {
+    a = Constructions::CharacterSet.new(codes:[120,121,122])
+    construct = Constructions::ZeroOrMore.new(inner:a)
+    expected_table = [120,121,122].map |code| { [code,true] }.to_h
+    assert_equal(construct.sequence, [
+      [:span, expected_table]
+    ])
+  }
+  
   specify "OrderedChoice assembles choice and commit instructions": {
     a = Constructions::CharacterString.new(codes:[110,111,112])
     b = Constructions::CharacterString.new(codes:[120,121,122])

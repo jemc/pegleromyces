@@ -89,11 +89,15 @@ Constructions < EmptyObject {
   }
   
   ZeroOrMore << {
-    sequence: {
-      a = inner.sequence
-      size = a.size
-      [[:choice, size+2], *a, [:partial_commit, size*-1]]
-    }
+    sequence:
+      switch(inner, :"is_a?")
+        .when(CharacterSet) { [[:span, inner.table]] }
+        .else {
+          a = inner.sequence
+          size = a.size
+          [[:choice, size+2], *a, [:partial_commit, size*-1]]
+        }
+        .output
   }
   
   OrderedChoice << {
