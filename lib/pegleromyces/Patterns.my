@@ -81,4 +81,20 @@ Patterns < EmptyObject {
       self
     }
   }
+  
+  ##
+  # Capture and composition implementation
+  
+  Composition << {
+    Environment < BasicObject {
+      storage captures
+      method_missing: |name| captures(name)
+      
+      # Implement the action for composition in the '!' method.
+      # It will have access to the captures via method_missing.
+      "!": null
+    }
+    
+    new_environment: Environment { }
+  }
 }

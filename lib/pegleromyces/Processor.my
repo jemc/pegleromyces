@@ -6,17 +6,42 @@ Processor < BasicObject {
   storage starts
   var gathered: []
   
-  gather: captures.each |idx, metadata| {
+  var comp_stack: []
+  var result
+  
+  note_value: |name, value| {
+    comp = comp_stack.last
+    comp && (comp.push([name, value]))
+         || (self.result = value)
+  }
+    
+  
+  process_all: captures.each |idx, metadata| {
     type   = metadata.first
     captor = metadata.last
     
     value = null
     type == :start && (
+      # Note the starting index of the text capture
       starts(captor) = idx
-    true) || type == :end && (
-      gathered.push(captor, string.slice(starts(captor), idx))
-    true)
+    true) || (type == :end && (
+      # Slice the string with the given indices to get a text value
+      text = string.slice(starts(captor), idx)
+      note_value(captor.name, text)
+    true)) || (type == :comp_start && (
+      # Push a new layer of composition onto the stack
+      comp_stack.push([])
+    true)) || (type == :comp_end && (
+      capts = comp_stack.pop
+      env = captor.new_environment
+      
+      # Load the captures into the environment
+      capts.each |name, value| { name && (env.captures(name) = value) }
+      
+      # The '!' operator on the environment invokes the action to get a value
+      note_value(captor.name, !env)
+    true))
   }
   
-  process: gather; gathered.last
+  process: process_all; result
 }

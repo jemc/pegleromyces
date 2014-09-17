@@ -12,9 +12,18 @@ BasicSpec {
   
   it "stores the resulting composition in output": {
     parser = new_parser
-    parser.grammar = Patterns::Capture.new(inner:parser.grammar)
+    parser.grammar = Patterns::Composition {
+      var inner: Patterns::Capture {
+        var name: :foo
+        var inner: Patterns::AnyCharacter.new.*
+      }
+      new_environment: Patterns::Composition::Environment {
+        "!": "ABC_"foo"_123"
+      }
+    }
+    
     parser.parse("xyz")
     refute(parser.had_failure)
-    assert_equal(parser.output, "xyz")
+    assert_equal(parser.output, "ABC_xyz_123")
   }
 }
