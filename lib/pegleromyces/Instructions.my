@@ -80,7 +80,7 @@ Instructions < EmptyObject {
   
   # Match any character, |count| number of times.
   any: |count|
-    (self.idx + count > subject.count)
+    (self.idx + count > subject.size)
       && (self.ip = null; true) # failure
       || (
         self.ip = ip + 1

@@ -61,15 +61,15 @@ Constructions < EmptyObject {
   NegativePredicate << {
     sequence: {
       a = inner.sequence
-      [[:choice, a.count+2], *a, [:fail_twice]]
+      [[:choice, a.size+2], *a, [:fail_twice]]
     }
   }
   
   PositivePredicate << {
     sequence: {
       a = inner.sequence
-      count = a.count
-      [[:choice, count+4], [:choice, count+1], *a, [:commit, 1], [:fail]]
+      size = a.size
+      [[:choice, size+4], [:choice, size+1], *a, [:commit, 1], [:fail]]
     }
   }
   
@@ -84,15 +84,15 @@ Constructions < EmptyObject {
   ZeroOrOne << {
     sequence: {
       a = inner.sequence
-      [[:choice, a.count+2], *a, [:commit, 1]]
+      [[:choice, a.size+2], *a, [:commit, 1]]
     }
   }
   
   ZeroOrMore << {
     sequence: {
       a = inner.sequence
-      count = a.count
-      [[:choice, count+2], *a, [:partial_commit, count*-1]]
+      size = a.size
+      [[:choice, size+2], *a, [:partial_commit, size*-1]]
     }
   }
   
@@ -100,7 +100,7 @@ Constructions < EmptyObject {
     sequence: {
       a = first.sequence
       b = second.sequence
-      [[:choice, a.count+2], *a, [:commit, b.count+1], *b]
+      [[:choice, a.size+2], *a, [:commit, b.size+1], *b]
     }
   }
   
