@@ -1,4 +1,22 @@
 
 Processor < BasicObject {
+  var string
+  var captures
   
+  storage starts
+  var gathered: []
+  
+  gather: captures.each |idx, metadata| {
+    type   = metadata.first
+    captor = metadata.last
+    
+    value = null
+    type == :start && (
+      starts(captor) = idx
+    true) || type == :end && (
+      gathered.push(captor, string.slice(starts(captor), idx))
+    true)
+  }
+  
+  process: gather; gathered.last
 }

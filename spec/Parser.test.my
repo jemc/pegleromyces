@@ -9,4 +9,12 @@ BasicSpec {
   it "starts with a grammar that matches any string": {
     refute(new_parser.parse("xyz").had_failure)
   }
+  
+  it "stores the resulting composition in output": {
+    parser = new_parser
+    parser.grammar = Patterns::Capture.new(inner:parser.grammar)
+    parser.parse("xyz")
+    refute(parser.had_failure)
+    assert_equal(parser.output, "xyz")
+  }
 }

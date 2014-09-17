@@ -2,21 +2,34 @@
 Parser < BasicObject {
   
   var grammar: Patterns::AnyCharacter.new.*
-  
   var string: ""
+  
+  var output: null
+  var had_failure: false
   
   new_machine: Machine.new(
     sequence: grammar.construct.sequence + [[:end]]
     subject: string.each_char.map(&:ord)
   )
   
+  new_processor: Processor.new(
+    string: string
+  )
+  
   parse: |string=null| {
     string && (self.string = string)
     machine = new_machine
+    
     machine.execute
+    
+    unless(machine.had_failure) {
+      processor = new_processor
+      processor.captures = machine.captures
+      self.output = processor.process
+    }
+    
     self.had_failure = machine.had_failure
+    
     self
   }
-  
-  var had_failure
 }
