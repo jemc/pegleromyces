@@ -37,9 +37,9 @@ Instructions < EmptyObject {
   commit: |label|
     self.ip = stack.pop.to_a.first
   
-  # Note the current subject index and the captor to notify in post-processing.
-  capture: |captor|
-    captures.push([idx, captor])
+  # Note the current subject index and the given metadata for post-processing.
+  capture: |metadata|
+    captures.push([idx, metadata])
   
   # Pop the backtrack entry off the stack and copy the state from it,
   # effectively pursuing the alternative posed by the last :choice.

@@ -22,6 +22,8 @@ Patterns < EmptyObject {
   OrderedChoice     < BinaryBase { }
   Concatenation     < BinaryBase { }
   
+  Capture           < UnaryBase { }
+  
   ##
   # Shorthand methods for creating primitive patterns
   
