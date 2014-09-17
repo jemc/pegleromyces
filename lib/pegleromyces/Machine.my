@@ -26,8 +26,7 @@ Machine < BasicObject, Instructions {
   # Execute the given instruction sequence over the given subject
   execute: loop {
     !ip && (fail; true) || (
-      i = sequence.at(ip)
-      !i && (break; true) || send(*i)
+      (ip==true) && (break; true) || send(*sequence.at(ip))
     )
   }
   

@@ -17,14 +17,14 @@ Instructions < EmptyObject {
   
   # Create a backtrack entry on the stack, pointing |label| instructions ahead.
   choice: |label| {
-    self.ip = ip + 1
     stack.push([ip + label, idx, captures.dup])
+    self.ip = ip + 1
   }
   
   # Push return address onto the stack and jump |label| instructions ahead.
   call: |label| {
-    self.ip = ip + label
     stack.push(ip + 1)
+    self.ip = ip + label
   }
   
   # Return from a call by popping the return address and jumping to it.
@@ -38,8 +38,10 @@ Instructions < EmptyObject {
     self.ip = stack.pop.to_a.first
   
   # Note the current subject index and the given metadata for post-processing.
-  capture: |metadata|
+  capture: |metadata| {
     captures.push([idx, metadata])
+    self.ip = ip + 1
+  }
   
   # Pop the backtrack entry off the stack and copy the state from it,
   # effectively pursuing the alternative posed by the last :choice.
