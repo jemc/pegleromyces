@@ -1,0 +1,10 @@
+
+BasicSpec {
+  name: "Processor"
+  
+  new_processor: Processor { }
+  
+  [tests]
+  
+  it "exists": assert(new_processor)
+}
