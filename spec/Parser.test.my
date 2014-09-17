@@ -1,0 +1,10 @@
+
+BasicSpec {
+  name: "Parser"
+  
+  new_parser: Parser { }
+  
+  [tests]
+  
+  it "exists": assert(new_parser)
+}
