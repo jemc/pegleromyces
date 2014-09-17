@@ -23,6 +23,7 @@ Patterns < EmptyObject {
   Concatenation     < BinaryBase { }
   
   Capture           < UnaryBase { }
+  Composition       < UnaryBase { }
   
   ##
   # Shorthand methods for creating primitive patterns

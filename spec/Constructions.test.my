@@ -178,4 +178,16 @@ BasicSpec {
       [:capture, [:end, construct.captor]]
     ])
   }
+  
+  specify "Composition assembles capture instructions": {
+    a = Constructions::CharacterString.new(codes:[120,121,122])
+    construct = Constructions::Composition.new(inner:a)
+    assert_equal(construct.sequence, [
+      [:capture, [:comp_start, construct.captor]]
+      [:char, 120]
+      [:char, 121]
+      [:char, 122]
+      [:capture, [:comp_end, construct.captor]]
+    ])
+  }
 }

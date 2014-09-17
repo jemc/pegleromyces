@@ -23,6 +23,7 @@ Constructions < EmptyObject {
   Concatenation     < BinaryBase { }
   
   Capture           < UnaryBase { captor: inner }
+  Composition       < UnaryBase { captor: inner }
   
   ##
   # Bindings of patterns to constructions.
@@ -51,6 +52,7 @@ Constructions < EmptyObject {
   Patterns::Concatenation     << { construct_type: Concatenation }
   
   Patterns::Capture           << { construct_type: Capture }
+  Patterns::Composition       << { construct_type: Composition }
   
   ##
   # The instruction sequence generator for each construction.
@@ -120,6 +122,13 @@ Constructions < EmptyObject {
     sequence: {
       a = inner.sequence
       [[:capture, [:start, captor]], *a, [:capture, [:end, captor]]]
+    }
+  }
+  
+  Composition << {
+    sequence: {
+      a = inner.sequence
+      [[:capture, [:comp_start, captor]], *a, [:capture, [:comp_end, captor]]]
     }
   }
   
