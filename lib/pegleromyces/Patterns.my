@@ -22,8 +22,8 @@ Patterns < EmptyObject {
   OrderedChoice     < BinaryBase { }
   Concatenation     < BinaryBase { }
   
-  Capture           < UnaryBase { }
-  Composition       < UnaryBase { }
+  NamedCapture      < UnaryBase { }
+  Reduction         < UnaryBase { }
   
   ##
   # Shorthand methods for creating primitive patterns
@@ -55,7 +55,7 @@ Patterns < EmptyObject {
       other && ErrorCondition .new()
             || ZeroOrMore     .new(inner:self)
     
-    "[]": |name| Capture.new(inner:self, name:name)
+    "[]": |name| NamedCapture .new(inner:self, name:name)
   }
   
   NegativePredicate << {
@@ -85,9 +85,9 @@ Patterns < EmptyObject {
   }
   
   ##
-  # Capture and composition implementation
+  # Reduction and associated named captures implementation
   
-  Composition << {
+  Reduction << {
     Environment < BasicObject {
       var captures # A Hash of capture names to values
       var builder # The fallback delegate for methods that are not capture names
@@ -95,7 +95,7 @@ Patterns < EmptyObject {
       method_missing: |name, *args|
         captures.fetch(name) { builder.send(name, *args) }
       
-      # Implement the action for composition in the '!' method.
+      # Implement the action for the reduction in the '!' method.
       # It will have access to the captures via method_missing.
       "!": null
     }

@@ -12,13 +12,13 @@ BasicSpec {
   
   it "stores the resulting toplevel captures in results": {
     parser = new_parser
-    parser.grammar = Patterns::Composition {
+    parser.grammar = Patterns::Reduction {
       name: :root
-      var inner: Patterns::Capture {
+      var inner: Patterns::NamedCapture {
         var name: :foo
         var inner: Patterns::AnyCharacter.new.*
       }
-      new_environment: Patterns::Composition::Environment {
+      new_environment: Patterns::Reduction::Environment {
         "!": "ABC_"foo"_123"
       }
     }

@@ -95,10 +95,10 @@ BasicSpec {
     assert_equal(b.inner, a)
   }
   
-  it "creates a Capture with the '[]' operator, given a capture name": {
+  it "creates a NamedCapture with the '[]' operator, given a capture name": {
     a = new_pattern
     b = a[:foo]
-    assert_is_a(b, Patterns::Capture)
+    assert_is_a(b, Patterns::NamedCapture)
     assert_equal(b.inner, a)
     assert_equal(b.name, :foo)
   }

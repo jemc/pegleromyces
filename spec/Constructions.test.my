@@ -167,9 +167,9 @@ BasicSpec {
     ])
   }
   
-  specify "Capture assembles capture instructions": {
+  specify "NamedCapture assembles capture instructions": {
     a = Constructions::CharacterString.new(codes:[120,121,122])
-    construct = Constructions::Capture.new(inner:a)
+    construct = Constructions::NamedCapture.new(inner:a)
     assert_equal(construct.sequence, [
       [:capture, [:start, construct.captor]]
       [:char, 120]
@@ -179,9 +179,9 @@ BasicSpec {
     ])
   }
   
-  specify "Composition assembles capture instructions": {
+  specify "Reduction assembles capture instructions": {
     a = Constructions::CharacterString.new(codes:[120,121,122])
-    construct = Constructions::Composition.new(inner:a)
+    construct = Constructions::Reduction.new(inner:a)
     assert_equal(construct.sequence, [
       [:capture, [:comp_start, construct.captor]]
       [:char, 120]

@@ -22,8 +22,8 @@ Constructions < EmptyObject {
   OrderedChoice     < BinaryBase { }
   Concatenation     < BinaryBase { }
   
-  Capture           < UnaryBase { var captor }
-  Composition       < UnaryBase { var captor }
+  NamedCapture      < UnaryBase { var captor }
+  Reduction         < UnaryBase { var captor }
   
   ##
   # Bindings of patterns to constructions.
@@ -51,11 +51,11 @@ Constructions < EmptyObject {
   Patterns::OrderedChoice     << { construct_type: OrderedChoice }
   Patterns::Concatenation     << { construct_type: Concatenation }
   
-  Patterns::Capture           << {
-    construct: Capture.new(inner:inner.construct, captor:self)
+  Patterns::NamedCapture      << {
+    construct: NamedCapture.new(inner:inner.construct, captor:self)
   }
-  Patterns::Composition       << {
-    construct: Composition.new(inner:inner.construct, captor:self)
+  Patterns::Reduction         << {
+    construct: Reduction.new(inner:inner.construct, captor:self)
   }
   
   ##
@@ -122,14 +122,14 @@ Constructions < EmptyObject {
     sequence: [*first.sequence, *second.sequence]
   }
   
-  Capture << {
+  NamedCapture << {
     sequence: {
       a = inner.sequence
       [[:capture, [:start, captor]], *a, [:capture, [:end, captor]]]
     }
   }
   
-  Composition << {
+  Reduction << {
     sequence: {
       a = inner.sequence
       [[:capture, [:comp_start, captor]], *a, [:capture, [:comp_end, captor]]]
