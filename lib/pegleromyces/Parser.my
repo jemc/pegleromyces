@@ -16,7 +16,7 @@ Parser < BasicObject {
     string: string
   )
   
-  new_builder: EmptyObject { }
+  new_builder: Builder.new
   
   parse: |string=null| {
     string && (self.string = string)

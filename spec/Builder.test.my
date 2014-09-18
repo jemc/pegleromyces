@@ -1,0 +1,10 @@
+
+BasicSpec {
+  name: "Builder"
+  
+  new_builder: Builder { }
+  
+  [tests]
+  
+  it "exists": assert(new_builder)
+}
