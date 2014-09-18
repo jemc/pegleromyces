@@ -23,7 +23,7 @@ Patterns < EmptyObject {
   Concatenation     < BinaryBase { }
   
   NamedCapture      < UnaryBase { }
-  Reduction         < UnaryBase { }
+  Reduction         < UnaryBase { var block }
   
   ##
   # Shorthand methods for creating primitive patterns
@@ -34,6 +34,7 @@ Patterns < EmptyObject {
     str:   |string|     CharacterString.new(codes:string.each_char.map(&:ord))
     set:   |string|        CharacterSet.new(codes:string.each_char.map(&:ord))
     range: |start, end|  CharacterRange.new(start:start.ord, end:end.ord)
+    r:     |pattern, &block|  Reduction.new(inner:pattern, block:block)
   }
   
   ##
@@ -100,6 +101,10 @@ Patterns < EmptyObject {
       "!": null
     }
     
-    new_environment: Environment { }
+    new_environment: {
+      env = Patterns::Reduction::Environment { }
+      env.component.declare_meme(:"!", &block)
+      env
+    }
   }
 }

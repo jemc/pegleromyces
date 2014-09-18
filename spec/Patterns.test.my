@@ -132,4 +132,13 @@ BasicSpec {
     assert_equal(a.start, 120)
     assert_equal(a.end,   122)
   }
+  
+  it "creates a Reduction with the 'r' shorthand method": {
+    a_proc = Proc.new { }
+    a = new_pattern
+    b = shorthand.r(a, &a_proc)
+    assert_is_a(b, Patterns::Reduction)
+    assert_equal(b.inner, a)
+    assert_equal(b.block, a_proc)
+  }
 }

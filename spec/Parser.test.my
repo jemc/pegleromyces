@@ -3,6 +3,7 @@ BasicSpec {
   name: "Parser"
   
   new_parser: Parser { }
+  patt: Patterns::ShorthandMethods { }
   
   [tests]
   
@@ -12,18 +13,11 @@ BasicSpec {
   
   it "stores the resulting toplevel captures in results": {
     parser = new_parser
-    parser.grammar = Patterns::Reduction {
-      name: :root
-      var inner: Patterns::NamedCapture {
-        var name: :foo
-        var inner: Patterns::AnyCharacter.new.*
-      }
-      new_environment: Patterns::Reduction::Environment {
-        "!": "ABC_"foo"_123"
-      }
-    }
+    parser.grammar = patt.r((patt.any.*)[:foo]) { "ABC_"foo"_123" }
+    # parser.grammar = (parser.grammar)[:root] # TODO: use outer capture here
     
     parser.parse("xyz")
-    assert_equal(parser.result.fetch(:root), "ABC_xyz_123")
+    assert_equal(parser.result.values.first, "ABC_xyz_123")
+    # assert_equal(parser.result.fetch(:root), "ABC_xyz_123") # TODO: use outer capture above
   }
 }
