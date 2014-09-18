@@ -34,8 +34,10 @@ Instructions < EmptyObject {
   
   # Pop and discard the backtrack entry from the stack and jump to |label|.
   # It is assumed that the top of the stack is a backtrack entry from a :choice.
-  commit: |label|
-    self.ip = stack.pop.to_a.first
+  commit: |label| {
+    stack.pop
+    self.ip = ip + label
+  }
   
   # Note the current subject index and the given metadata for post-processing.
   capture: |metadata| {
@@ -67,13 +69,13 @@ Instructions < EmptyObject {
   
   # Like char, but accept any char whose code is a valid key in |table|
   charset: |table|
-    table.key?(subject.at(idx))
+    (code=subject.at(idx); code && table.key?(code))
       && (self.ip = ip + 1; self.idx = idx + 1)
       || (self.ip = null) # failure
   
   # Like char, but accept any char whose code is between |start| and |end|
   charrange: |start, end|
-    (code=subject.at(idx); code>=start && code<=end)
+    (code=subject.at(idx); code && code>=start && code<=end)
       && (self.ip = ip + 1; self.idx = idx + 1)
       || (self.ip = null) # failure
   
