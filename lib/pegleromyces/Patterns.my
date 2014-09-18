@@ -54,6 +54,8 @@ Patterns < EmptyObject {
     "*": |other=false|
       other && ErrorCondition .new()
             || ZeroOrMore     .new(inner:self)
+    
+    "[]": |name| Capture.new(inner:self, name:name)
   }
   
   NegativePredicate << {

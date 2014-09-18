@@ -95,6 +95,14 @@ BasicSpec {
     assert_equal(b.inner, a)
   }
   
+  it "creates a Capture with the '[]' operator, given a capture name": {
+    a = new_pattern
+    b = a[:foo]
+    assert_is_a(b, Patterns::Capture)
+    assert_equal(b.inner, a)
+    assert_equal(b.name, :foo)
+  }
+  
   it "creates an AnyCharacter with the 'any' shorthand method": {
     a = shorthand.any
     assert_is_a(a, Patterns::AnyCharacter)
