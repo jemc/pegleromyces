@@ -132,7 +132,7 @@ Constructions < EmptyObject {
   Reduction << {
     sequence: {
       a = inner.sequence
-      [[:capture, [:comp_start, captor]], *a, [:capture, [:comp_end, captor]]]
+      [[:capture, [:r_start, captor]], *a, [:capture, [:r_end, captor]]]
     }
   }
   

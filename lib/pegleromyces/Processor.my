@@ -28,10 +28,10 @@ Processor < BasicObject {
       start_idx = cidx_stack.pop
       value = captures.fetch(idx) { string.slice(start_idx, idx) }
       captures.store(captor.name, value)
-    true)) || (type == :comp_start && (
-      # Push a new layer of composition onto the stack
+    true)) || (type == :r_start && (
+      # Push a new layer of reduction context onto the stack
       push_layer
-    true)) || (type == :comp_end && (
+    true)) || (type == :r_end && (
       captures = pop_layer
       
       env = captor.new_environment
