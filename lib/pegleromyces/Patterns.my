@@ -87,8 +87,11 @@ Patterns < EmptyObject {
   
   Composition << {
     Environment < BasicObject {
-      storage captures
-      method_missing: |name| captures(name)
+      var captures # A Hash of capture names to values
+      var builder # The fallback delegate for methods that are not capture names
+      
+      method_missing: |name, *args|
+        captures.fetch(name) { builder.send(name, *args) }
       
       # Implement the action for composition in the '!' method.
       # It will have access to the captures via method_missing.

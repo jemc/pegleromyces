@@ -4,8 +4,7 @@ Parser < BasicObject {
   var grammar: Patterns::AnyCharacter.new.*
   var string: ""
   
-  var output: null
-  var had_failure: false
+  var result: null
   
   new_machine: Machine.new(
     sequence: grammar.construct.sequence + [[:end]]
@@ -13,8 +12,11 @@ Parser < BasicObject {
   )
   
   new_processor: Processor.new(
+    builder: new_builder
     string: string
   )
+  
+  new_builder: EmptyObject { }
   
   parse: |string=null| {
     string && (self.string = string)
@@ -24,11 +26,9 @@ Parser < BasicObject {
     
     unless(machine.had_failure) {
       processor = new_processor
-      processor.captures = machine.captures
-      self.output = processor.process
+      processor.capture_tokens = machine.captures
+      self.result = processor.process
     }
-    
-    self.had_failure = machine.had_failure
     
     self
   }

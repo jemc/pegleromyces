@@ -1,47 +1,44 @@
 
 Processor < BasicObject {
   var string
-  var captures
+  var capture_tokens
+  var builder
   
   storage starts
   var gathered: []
   
-  var comp_stack: []
-  var result
+  var cidx_stack: [] # A FILO stack of start indices for captures
+  var capt_stack: [] # A FILO stack of Hashes with capture names, values
   
-  note_value: |name, value| {
-    comp = comp_stack.last
-    comp && (comp.push([name, value]))
-         || (self.result = value)
-  }
-    
+  pop_layer:  capt_stack.pop
+  push_layer: capt_stack.push(::Hash.new)
   
-  process_all: captures.each |idx, metadata| {
+  process_all: capture_tokens.each |idx, metadata| {
     type   = metadata.first
     captor = metadata.last
     
     value = null
     type == :start && (
       # Note the starting index of the text capture
-      starts(captor) = idx
+      cidx_stack.push(idx)
     true) || (type == :end && (
       # Slice the string with the given indices to get a text value
-      text = string.slice(starts(captor), idx)
-      note_value(captor.name, text)
+      text = string.slice(cidx_stack.pop, idx)
+      capt_stack.last.store(captor.name, text)
     true)) || (type == :comp_start && (
       # Push a new layer of composition onto the stack
-      comp_stack.push([])
+      push_layer
     true)) || (type == :comp_end && (
-      capts = comp_stack.pop
-      env = captor.new_environment
+      captures = pop_layer
       
-      # Load the captures into the environment
-      capts.each |name, value| { name && (env.captures(name) = value) }
+      env = captor.new_environment
+      env.captures = captures
+      env.builder = builder
       
       # The '!' operator on the environment invokes the action to get a value
-      note_value(captor.name, !env)
+      capt_stack.last.store(captor.name, !env)
     true))
   }
   
-  process: process_all; result
+  process: push_layer; process_all; pop_layer
 }

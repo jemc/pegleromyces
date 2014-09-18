@@ -7,12 +7,13 @@ BasicSpec {
   [tests]
   
   it "starts with a grammar that matches any string": {
-    refute(new_parser.parse("xyz").had_failure)
+    assert(new_parser.parse("xyz").result)
   }
   
-  it "stores the resulting composition in output": {
+  it "stores the resulting toplevel captures in results": {
     parser = new_parser
     parser.grammar = Patterns::Composition {
+      name: :root
       var inner: Patterns::Capture {
         var name: :foo
         var inner: Patterns::AnyCharacter.new.*
@@ -23,7 +24,6 @@ BasicSpec {
     }
     
     parser.parse("xyz")
-    refute(parser.had_failure)
-    assert_equal(parser.output, "ABC_xyz_123")
+    assert_equal(parser.result.fetch(:root), "ABC_xyz_123")
   }
 }
