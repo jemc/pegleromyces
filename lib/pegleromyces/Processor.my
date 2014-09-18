@@ -22,9 +22,12 @@ Processor < BasicObject {
       # Note the starting index of the text capture
       cidx_stack.push(idx)
     true) || (type == :end && (
-      # Slice the string with the given indices to get a text value
-      text = string.slice(cidx_stack.pop, idx)
-      capt_stack.last.store(captor.name, text)
+      # Pick up the captured reduction, or if no reduction found
+      # slice the string with the given indices to get a text value
+      captures = capt_stack.last
+      start_idx = cidx_stack.pop
+      value = captures.fetch(idx) { string.slice(start_idx, idx) }
+      captures.store(captor.name, value)
     true)) || (type == :comp_start && (
       # Push a new layer of composition onto the stack
       push_layer
@@ -36,7 +39,9 @@ Processor < BasicObject {
       env.builder = builder
       
       # The '!' operator on the environment invokes the action to get a value
-      capt_stack.last.store(captor.name, !env)
+      # Store with the string index as the key so the reduction can be captured
+      value = !env
+      capt_stack.last.store(idx, value)
     true))
   }
   
