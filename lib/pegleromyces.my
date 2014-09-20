@@ -8,4 +8,5 @@ import 'pegleromyces/Machine.my'
 import 'pegleromyces/Processor.my'
 import 'pegleromyces/Builder.my'
 
+import 'pegleromyces/Grammar.my'
 import 'pegleromyces/Parser.my'

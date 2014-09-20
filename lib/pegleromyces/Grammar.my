@@ -1,0 +1,6 @@
+
+Grammar < BasicObject {
+  
+  [rules]
+  root: Patterns::AnyCharacter.new.*
+}

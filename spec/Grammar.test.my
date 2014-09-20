@@ -1,0 +1,10 @@
+
+BasicSpec {
+  name: "Grammar"
+  
+  new_grammar: Grammar { }
+  
+  [tests]
+  
+  it "has a root rule defined":  assert(new_grammar.rules.root)
+}
