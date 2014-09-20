@@ -1,8 +1,11 @@
 
 import 'pegleromyces/Patterns.my'
 import 'pegleromyces/Constructions.my'
+
 import 'pegleromyces/Instructions.my'
 import 'pegleromyces/Machine.my'
+
 import 'pegleromyces/Processor.my'
 import 'pegleromyces/Builder.my'
+
 import 'pegleromyces/Parser.my'
