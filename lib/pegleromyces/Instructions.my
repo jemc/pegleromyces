@@ -80,7 +80,11 @@ Instructions < EmptyObject {
       || (self.ip = null) # failure
   
   # (Kleene star applied to a charset)
-  span: TODO
+  span: |table| loop {
+    (code=subject.at(idx); code && table.key?(code))
+      && (self.idx = idx + 1)
+      || (self.ip = ip + 1; break)
+  }
   
   # Match any character, |count| number of times.
   any: |count|
