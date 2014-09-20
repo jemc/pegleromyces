@@ -1,7 +1,6 @@
 
 import 'pegleromyces/Patterns.my'
 import 'pegleromyces/Constructions.my'
-import 'pegleromyces/Program.my'
 import 'pegleromyces/Instructions.my'
 import 'pegleromyces/Machine.my'
 import 'pegleromyces/Processor.my'
