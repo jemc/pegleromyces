@@ -1,7 +1,7 @@
 
 Parser < BasicObject {
   
-  var grammar: Patterns::AnyCharacter.new.*
+  var grammar: Grammar { }
   var string: ""
   
   var result: null
@@ -10,7 +10,7 @@ Parser < BasicObject {
     constructable.construct.sequence + [[:end]]
   
   new_machine: Machine.new(
-    sequence: sequence(grammar)
+    sequence: sequence(grammar.rules.root)
     subject: string.each_char.map(&:ord)
   )
   

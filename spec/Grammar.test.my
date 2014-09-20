@@ -6,5 +6,5 @@ BasicSpec {
   
   [tests]
   
-  it "has a root rule defined":  assert(new_grammar.rules.root)
+  it "starts with a root rule defined":  assert(new_grammar.rules.root)
 }

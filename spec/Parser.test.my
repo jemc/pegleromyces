@@ -3,7 +3,32 @@ BasicSpec {
   name: "Parser"
   
   new_parser: Parser { }
-  g: Patterns::ShorthandMethods { }
+  
+  basic_grammar: Grammar {
+    c: character_classes
+    
+    [character_classes]
+    upper: range('A','Z')
+    lower: range('a','z') / str('_')
+    num:   range('0','9')
+    alpha: upper / lower
+    spc:   set(" \t\r\f\v")
+    
+    [rules]
+    rule root: expr[:root]
+    rule expr: (assign / constant / ident / float / integer)
+    
+    rule constant: r((c.upper + c.alpha.*)[:text])  { [:constant, text.to_sym] }
+    rule ident:    r((c.lower + c.alpha.*)[:text])  { [:ident,    text.to_sym] }
+    rule integer:  r((str('-').- + c.num.+)[:text]) { [:integer,  text.to_i] }
+    rule float:    r((str('-').- + c.num.+ + str('.') + c.num.+)[:text])
+                                                    { [:float,    text.to_f] }
+    
+    rule assign_lhs: (constant / ident)
+    rule assign_rhs: (constant / ident / float / integer)
+    rule assign: r(assign_lhs[:lhs] + c.spc.* + str('=') + c.spc.* +
+                   assign_rhs[:rhs]) { [:assign, lhs, rhs] }
+  }
   
   [tests]
   
@@ -11,42 +36,9 @@ BasicSpec {
     assert(new_parser.parse("xyz").result)
   }
   
-  it "stores the resulting toplevel captures in results": {
+  it "can parse from a basic grammar": {
     parser = new_parser
-    parser.grammar = g.r(g.any.*[:foo]) { "ABC_"foo"_123" }
-    parser.grammar = (parser.grammar)[:root]
-    
-    parser.parse("xyz")
-    assert_equal(parser.result.fetch(:root), "ABC_xyz_123")
-  }
-  
-  it "can parse from a basic nested grammar": {
-    
-    c_upper  = g.range('A','Z')
-    c_lower  = g.range('a','z') / g.str('_')
-    c_num    = g.range('0','9')
-    c_alpha  = c_upper / c_lower
-    c_spc    = g.set(" \t\r\f\v")
-    
-    constant = g.r((c_upper + c_alpha.*)[:text]) { [:constant, text.to_sym] }
-    ident    = g.r((c_lower + c_alpha.*)[:text]) { [:ident,    text.to_sym] }
-    integer  = g.r((g.str('-').- + c_num.+)[:text])
-                                                 { [:integer,  text.to_i] }
-    float    = g.r((g.str('-').- + c_num.+ + g.str('.') + c_num.+)[:text])
-                                                 { [:float,    text.to_f] }
-    
-    assign_lhs = (constant / ident)
-    assign_rhs = (constant / ident / float / integer)
-    assign = g.r(assign_lhs[:lhs] + c_spc.*
-                 + g.str('=') + c_spc.*
-                 + assign_rhs[:rhs])
-               { [:assign, lhs, rhs] }
-    
-    expr = (assign / constant / ident / float / integer)
-    root = expr
-    
-    parser = new_parser
-    parser.grammar = root[:root]
+    parser.grammar = basic_grammar
     
     examples = [
       "xyz",           [:ident, :xyz]

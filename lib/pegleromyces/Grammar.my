@@ -1,5 +1,21 @@
 
-Grammar < BasicObject {
+Grammar < BasicObject, Patterns::ShorthandMethods {
+  Rule < Patterns::UnaryBase {
+    var inner
+    construct: inner.construct
+  }
+  
+  [decorators]
+  var rule: Decorator {
+    apply: |meme| {
+      # TODO: use some kind of Decorator#wrap mechanism instead
+      meme.target.declare_meme(meme.name, [:memoize]) {
+        Rule.new(inner:meme.result_for(self))
+      }
+    }
+    [transforms]
+    expose: false # Exposing the original meme would overwrite the wrapped one
+  }
   
   [rules]
   root: Patterns::AnyCharacter.new.*
