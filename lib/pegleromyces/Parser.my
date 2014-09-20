@@ -6,11 +6,13 @@ Parser < BasicObject {
   
   var result: null
   
-  memoize sequence: |constructable|
-    constructable.construct.sequence + [[:end]]
+  memoize make_sequence_table: |rule_table|
+    rule_table.map |k,v| {
+      [k, v.construct_rule.sequence + [[:return]]]
+    }.to_h
   
   new_machine: Machine.new(
-    sequence: sequence(grammar.rules.root)
+    sequence_table: make_sequence_table(grammar.rule_table)
     subject: string.each_char.map(&:ord)
   )
   

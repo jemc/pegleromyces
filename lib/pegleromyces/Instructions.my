@@ -21,16 +21,23 @@ Instructions < EmptyObject {
     self.ip = ip + 1
   }
   
-  # Push return address onto the stack and jump |label| instructions ahead.
-  call: |label| {
-    stack.push(ip + 1)
-    self.ip = ip + label
+  # Push two-part return address onto the stack and goto start of |new_ipk|
+  call: |new_ipk| {
+    stack.push([ip+1, ipk])
+    self.ip = 0
+    self.ipk = new_ipk
   }
   
   # Return from a call by popping the return address and jumping to it.
   # It is assumed that the top of the stack is a return address from a :call.
-  return:
-    self.ip = stack.pop.to_i
+  return: {
+    addr = stack.pop
+    addr && (
+      self.ipk = addr.pop
+      self.ip  = addr.pop
+      true
+    ) || end
+  }
   
   # Pop and discard the backtrack entry from the stack and jump to |label|.
   # It is assumed that the top of the stack is a backtrack entry from a :choice.
@@ -47,14 +54,24 @@ Instructions < EmptyObject {
   
   # Pop the backtrack entry off the stack and copy the state from it,
   # effectively pursuing the alternative posed by the last :choice.
-  fail:
+  handle_fail:
     self.stack.empty?
       && ErrorCondition.new
       || (
-        entry = stack.pop.to_a
-        self.captures = entry.pop # Pop each entry item
-        self.idx      = entry.pop # and restore it to the relevant variable
-        self.ip       = entry.pop # (popping implies reverse order)
+        entry = stack.pop
+        size = entry.size
+        size == 3 && ( # backtrack
+          self.captures = entry.pop
+          self.idx      = entry.pop
+          self.ip       = entry.pop
+          true
+        ) || ( # return and mark fail
+          size == 2 && (
+            self.ipk = entry.pop
+            self.ip  = null
+            true
+          ) || ErrorCondition.new
+        )
       )
   
   # Signal a successful match at the end of the complete pattern
@@ -121,7 +138,7 @@ Instructions < EmptyObject {
     self.stack.empty?
       && ErrorCondition.new
       || (
-        entry = stack.pop.to_a
+        entry = stack.pop
         self.captures = entry.pop # Pop each entry item
         self.idx      = entry.pop # and restore it to the relevant variable
         self.ip       = entry.pop # (popping implies reverse order)

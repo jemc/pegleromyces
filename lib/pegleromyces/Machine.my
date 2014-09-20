@@ -3,6 +3,9 @@ Machine < BasicObject, Instructions {
   # The index of the next program instruction, or null indicating fail condition
   var ip: 0
   
+  # The key name in the rule table of the next program instruction
+  var ipk: :root
+  
   # The current index into the subject string
   var idx: 0
   
@@ -20,13 +23,13 @@ Machine < BasicObject, Instructions {
   var subject: []
   
   # The sequence of instructions to execute
-  var sequence: []
+  var sequence_table: Hash.new
   
   
   # Execute the given instruction sequence over the given subject
   execute: loop {
-    !ip && (fail; true) || (
-      (ip==true) && (break; true) || send(*sequence.at(ip))
+    !ip && (handle_fail; true) || (
+      (ip==true) && (break; true) || send(*sequence_table.fetch(ipk)[ip])
     )
   }
   

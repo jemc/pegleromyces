@@ -1,16 +1,30 @@
 
-Grammar < BasicObject, Patterns::ShorthandMethods {
+Grammar < Object, Patterns::ShorthandMethods {
+  
   Rule < Patterns::UnaryBase {
     var inner
-    construct: inner.construct
+    construct_rule: inner.construct
+    construct: RuleReference.new(name:name)
   }
+  
+  RuleReference < Constructions::UnaryBase {
+    var name
+    sequence: [[:call, name]]
+  }
+  
+  var rule_table: Hash.new
+  
+  on creation: rules.root
   
   [decorators]
   var rule: Decorator {
     apply: |meme| {
+      name = meme.name
       # TODO: use some kind of Decorator#wrap mechanism instead
-      meme.target.declare_meme(meme.name, [:memoize]) {
-        Rule.new(inner:meme.result_for(self))
+      meme.target.declare_meme(name, [:memoize]) {
+        rule = Rule.new(name:name, inner:meme.result_for(self))
+        rule_table[name] = rule
+        rule
       }
     }
     [transforms]
@@ -18,5 +32,5 @@ Grammar < BasicObject, Patterns::ShorthandMethods {
   }
   
   [rules]
-  root: Patterns::AnyCharacter.new.*
+  rule root: Patterns::AnyCharacter.new.*
 }
