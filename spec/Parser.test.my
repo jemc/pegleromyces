@@ -26,14 +26,7 @@ BasicSpec {
     c_lower  = g.range('a','z') / g.str('_')
     c_num    = g.range('0','9')
     c_alpha  = c_upper / c_lower
-    
-    c_nl     = g.str("\n")
-    c_eof    = !g.any
-    c_eol    = c_nl / c_eof
-    
-    comment  = g.str('#') + (!c_eol + g.any).*
-    c_spc    = g.set(" \t\r\f\v") / g.str("\\\n") / comment
-    c_spc_nl = c_spc / c_nl
+    c_spc    = g.set(" \t\r\f\v")
     
     constant = g.r((c_upper + c_alpha.*)[:text]) { [:constant, text.to_sym] }
     ident    = g.r((c_lower + c_alpha.*)[:text]) { [:ident,    text.to_sym] }
@@ -52,17 +45,17 @@ BasicSpec {
     expr = (assign / constant / ident / float / integer)
     root = expr
     
+    parser = new_parser
+    parser.grammar = root[:root]
+    
     examples = [
       "xyz",           [:ident, :xyz]
       "99",            [:integer, 99]
       "_foo = -88.8",  [:assign, [:ident, :"_foo"], [:float, -88.8]]
-      "Foo_BAR = 5",   [:assign, [:constant, :"Foo_BAR"], [:integer, 5]]
+      "Foo_BAR=5",     [:assign, [:constant, :"Foo_BAR"], [:integer, 5]]
     ]
     
     examples.each_slice(2) |input, output| {
-      parser = new_parser
-      parser.grammar = root[:root]
-      
       assert_equal(parser.parse(input).result.fetch(:root), output)
     }
   }
