@@ -22,7 +22,11 @@ Grammar < BasicObject, Patterns::ShorthandMethods {
       name = meme.name
       # TODO: use some kind of Decorator#wrap mechanism instead
       meme.target.declare_meme(name, [:memoize]) {
-        rule = Rule.new(name:name, inner:meme.result_for(self))
+        outer_self = self
+        rule = Rule {
+          name: name
+          inner: meme.result_for(outer_self)
+        }
         rule_table[name] = rule
         rule
       }
