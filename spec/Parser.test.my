@@ -1,5 +1,5 @@
 
-import 'fixtures/MycoGrammar.my'
+# import 'fixtures/MycoGrammar.my'
 
 BasicSpec {
   name: "Parser"
@@ -58,34 +58,34 @@ BasicSpec {
     }
   }
   
-  it "can parse from the Myco grammar": {
-    parser = new_parser
-    parser.grammar = MycoGrammar
+  # it "can parse from the Myco grammar": {
+  #   parser = new_parser
+  #   parser.grammar = MycoGrammar
     
-    # TODO: remove this hack for getting the processor methods
-    builder = BasicObject {
-      var ast: BasicObject {
-        var delegate: Myco::ToolSet::Parser.new("",null,null)
-        method_missing: |meth, loc, *args| {
-          delegate.send(:"process_"meth"", loc.line, *args)
-        }
-      }
-    }
-    parser.component.declare_meme(:new_builder) { builder }
+  #   # TODO: remove this hack for getting the processor methods
+  #   builder = BasicObject {
+  #     var ast: BasicObject {
+  #       var delegate: Myco::ToolSet::Parser.new("",null,null)
+  #       method_missing: |meth, loc, *args| {
+  #         delegate.send(:"process_"meth"", loc.line, *args)
+  #       }
+  #     }
+  #   }
+  #   parser.component.declare_meme(:new_builder) { builder }
     
-    examples = [
-      'Object {
-        foo: one
-      }'
-      [:declobj, [:array, [:const, :"Object"]], [:block, 
-        [:meme, :foo, [:array], [:args, :"*"], [:block, [:lambig, :one]]],
-      ]]
-    ]
+  #   examples = [
+  #     'Object {
+  #       foo: one
+  #     }'
+  #     [:declobj, [:array, [:const, :"Object"]], [:block, 
+  #       [:meme, :foo, [:array], [:args, :"*"], [:block, [:lambig, :one]]],
+  #     ]]
+  #   ]
     
-    examples.each_slice(2) |input, output| {
-      result = parser.parse(input).result.fetch(:root)
-      result = result.body.to_sexp.last
-      assert_equal(result, output)
-    }
-  }
+  #   examples.each_slice(2) |input, output| {
+  #     result = parser.parse(input).result.fetch(:root)
+  #     result = result.body.to_sexp.last
+  #     assert_equal(result, output)
+  #   }
+  # }
 }
