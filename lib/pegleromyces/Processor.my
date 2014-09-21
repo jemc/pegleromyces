@@ -8,42 +8,79 @@ Processor < BasicObject {
   var gathered: []
   
   var cidx_stack: [] # A FILO stack of start indices for captures
+  var midx_stack: [] # A FILO stack of start indices for multiplicit captures
   var capt_stack: [] # A FILO stack of Hashes with capture names, values
   
   pop_layer:  capt_stack.pop
   push_layer: capt_stack.push(::Hash.new)
   
-  process_all: capture_tokens.each |idx, metadata| {
+  process: push_layer; process_each; pop_layer
+  
+  process_each: capture_tokens.each |idx, metadata| {
     type   = metadata.first
     captor = metadata.last
-    
-    value = null
-    type == :start && (
-      # Note the starting index of the text capture
-      cidx_stack.push(idx)
-    true) || (type == :end && (
-      # Pick up the captured reduction, or if no reduction found
-      # slice the string with the given indices to get a text value
-      captures = capt_stack.last
-      start_idx = cidx_stack.pop
-      value = captures.fetch(idx) { string.slice(start_idx, idx) }
-      captures.store(captor.name, value)
-    true)) || (type == :r_start && (
-      # Push a new layer of reduction context onto the stack
-      push_layer
-    true)) || (type == :r_end && (
-      captures = pop_layer
-      
-      env = captor.new_environment
-      env.captures = captures
-      env.builder = builder
-      
-      # The '!' operator on the environment invokes the action to get a value
-      # Store with the string index as the key so the reduction can be captured
-      value = !env
-      capt_stack.last.store(idx, value)
-    true))
+    send(type, idx, captor)
   }
   
-  process: push_layer; process_all; pop_layer
+  c_start: |idx, captor| {
+    # Note the starting index of the text capture
+    cidx_stack.push(idx)
+  }
+  
+  c_end: |idx, captor| {
+    captures = capt_stack.last
+    start_idx = cidx_stack.pop
+    
+    # Pick up the captured reduction, or if no reduction found
+    # slice the string with the given indices to get a text value
+    value = captures.fetch(idx) { string.slice(start_idx, idx) }
+    
+    captures.store(idx, value)
+    captures.store(captor.name, value)
+  }
+  
+  m_start: |idx, captor| {
+    midx_stack.push(idx)
+    c_start(idx, captor)
+  }
+  
+  m_split: |idx, captor| {
+    c_end(idx, captor)
+    c_start(idx, captor)
+  }
+  
+  m_end: |idx, captor| {
+    captures = capt_stack.last
+    start_idx = midx_stack.pop
+    
+    # Try to find a group of "anonymous" captures by index first
+    group = []
+    captures.each |k,v| {
+      (k.is_a?(Fixnum) && k<=idx && k>start_idx) && group.push(v)
+    }
+    
+    # Otherwise, slice the string to get the text value
+    value = !(group.empty?) && group || string.slice(start_idx, idx)
+    
+    captures.store(idx, value)
+    captures.store(captor.name, value)
+  }
+  
+  r_start: |idx, captor| (
+    # Push a new layer of reduction context onto the stack
+    push_layer
+  )
+  
+  r_end: |idx, captor| {
+    captures = pop_layer
+    
+    env = captor.new_environment
+    env.captures = captures
+    env.builder = builder
+    
+    # The '!' operator on the environment invokes the action to get a value
+    # Store with the string index as the key so the reduction can be captured
+    value = !env
+    capt_stack.last.store(idx, value)
+  }
 }

@@ -171,11 +171,47 @@ BasicSpec {
     a = Constructions::CharacterString.new(codes:[120,121,122])
     construct = Constructions::NamedCapture.new(inner:a)
     assert_equal(construct.sequence, [
-      [:capture, [:start, construct.captor]]
+      [:capture, [:c_start, construct.captor]]
       [:char, 120]
       [:char, 121]
       [:char, 122]
-      [:capture, [:end, construct.captor]]
+      [:capture, [:c_end, construct.captor]]
+    ])
+  }
+  
+  specify "NamedCapture of ZeroOrMore has a special multiplicit strategy": {
+    a = Constructions::CharacterString.new(codes:[120,121,122])
+    b = Constructions::ZeroOrMore.new(inner:a)
+    construct = Constructions::NamedCapture.new(inner:b)
+    assert_equal(construct.sequence, [
+      [:capture, [:m_start, null]]
+      [:choice, 6]
+      [:char, 120]
+      [:char, 121]
+      [:char, 122]
+      [:capture, [:m_split, null]]
+      [:partial_commit, -4]
+      [:capture, [:m_end, null]]
+    ])
+  }
+  
+  specify "NamedCapture of OneOrMore has a special multiplicit strategy": {
+    a = Constructions::CharacterString.new(codes:[120,121,122])
+    b = Constructions::OneOrMore.new(inner:a)
+    construct = Constructions::NamedCapture.new(inner:b)
+    assert_equal(construct.sequence, [
+      [:capture, [:m_start, null]]
+      [:char, 120]
+      [:char, 121]
+      [:char, 122]
+      [:capture, [:m_split, null]]
+      [:choice, 6]
+      [:char, 120]
+      [:char, 121]
+      [:char, 122]
+      [:capture, [:m_split, null]]
+      [:partial_commit, -4]
+      [:capture, [:m_end, null]]
     ])
   }
   

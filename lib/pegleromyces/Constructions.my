@@ -84,9 +84,11 @@ Constructions < EmptyObject {
   }
   
   OneOrMore << {
+    var inlaid
     sequence: {
       one = inner.sequence
-      or_more = ZeroOrMore.new(inner:inner).sequence
+      inlaid && (one = one + inlaid)
+      or_more = ZeroOrMore.new(inner:inner,inlaid:inlaid).sequence
       [*one, *or_more]
     }
   }
@@ -99,11 +101,13 @@ Constructions < EmptyObject {
   }
   
   ZeroOrMore << {
+    var inlaid
     sequence:
       switch(inner, :"is_a?")
         .when(CharacterSet) { [[:span, inner.table]] }
         .else {
           a = inner.sequence
+          inlaid && (a = a + inlaid)
           size = a.size
           [[:choice, size+2], *a, [:partial_commit, size*-1]]
         }
@@ -124,8 +128,15 @@ Constructions < EmptyObject {
   
   NamedCapture << {
     sequence: {
-      a = inner.sequence
-      [[:capture, [:start, captor]], *a, [:capture, [:end, captor]]]
+      (inner.is_a?(OneOrMore) || inner.is_a?(ZeroOrMore))
+      && (
+        inner.inlaid = [[:capture, [:m_split, captor]]]
+        a = inner.sequence
+        [[:capture, [:m_start, captor]], *a, [:capture, [:m_end, captor]]]
+      ) || (
+        a = inner.sequence
+        [[:capture, [:c_start, captor]], *a, [:capture, [:c_end, captor]]]
+      )
     }
   }
   

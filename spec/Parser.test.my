@@ -16,7 +16,11 @@ BasicSpec {
     
     [rules]
     rule root: expr[:root]
-    rule expr: (assign / constant / ident / float / integer)
+    rule expr: (array / assign / constant / ident / float / integer)
+    
+    rule sepd_expr: r(c.spc.* + str(',') + c.spc.* + integer[:n0]) { n0 }
+    rule array: r(str('[') + expr[:n0] + sepd_expr.*[:nrest] + str(']'))
+                  { [n0, *nrest] }
     
     rule constant: r((c.upper + c.alpha.*)[:text])  { [:constant, text.to_sym] }
     rule ident:    r((c.lower + c.alpha.*)[:text])  { [:ident,    text.to_sym] }
@@ -25,7 +29,7 @@ BasicSpec {
                                                     { [:float,    text.to_f] }
     
     rule assign_lhs: (constant / ident)
-    rule assign_rhs: (constant / ident / float / integer)
+    rule assign_rhs: expr
     rule assign: r(assign_lhs[:lhs] + c.spc.* + str('=') + c.spc.* +
                    assign_rhs[:rhs]) { [:assign, lhs, rhs] }
   }
@@ -42,9 +46,9 @@ BasicSpec {
     
     examples = [
       "xyz",           [:ident, :xyz]
-      "99",            [:integer, 99]
       "_foo = -88.8",  [:assign, [:ident, :"_foo"], [:float, -88.8]]
       "Foo_BAR=5",     [:assign, [:constant, :"Foo_BAR"], [:integer, 5]]
+      "[99, 99]",      [[:integer, 99], [:integer, 99]]
     ]
     
     examples.each_slice(2) |input, output| {
