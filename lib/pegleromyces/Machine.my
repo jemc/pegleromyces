@@ -28,6 +28,7 @@ Machine < BasicObject, Instructions {
   
   # Execute the given instruction sequence over the given subject
   execute: loop {
+    p(idx, (subject.at(idx)||0).chr, subject.at(idx), ipk, ip, (ip && !(ip==true)) && sequence_table.fetch(ipk)[ip])
     !ip && (handle_fail; true) || (
       (ip==true) && (break; true) || send(*sequence_table.fetch(ipk)[ip])
     )

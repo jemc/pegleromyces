@@ -31,9 +31,13 @@ Processor < BasicObject {
     captures = capt_stack.last
     start_idx = cidx_stack.pop
     
-    # Pick up the captured reduction, or if no reduction found
+    # Pick up the captured reduction
+    # If the reduction is not found and the string length is not zero
     # slice the string with the given indices to get a text value
-    value = captures.fetch(idx) { string.slice(start_idx, idx) }
+    value = captures.fetch(idx) {
+      !(start_idx==idx) && string.slice(start_idx, idx-start_idx)
+    }
+    # p([captor.name, start_idx, idx, value])
     
     captures.store(idx, value)
     captures.store(captor.name, value)
@@ -54,13 +58,16 @@ Processor < BasicObject {
     start_idx = midx_stack.pop
     
     # Try to find a group of "anonymous" captures by index first
-    group = []
+    value = []
     captures.each |k,v| {
-      (k.is_a?(Fixnum) && k<=idx && k>start_idx) && group.push(v)
+      (k.is_a?(Fixnum) && k<=idx && k>start_idx) && value.push(v)
     }
     
-    # Otherwise, slice the string to get the text value
-    value = !(group.empty?) && group || string.slice(start_idx, idx)
+    # If the group is empty and the string length is not zero
+    # slice the string with the given indices to get a text value
+    (value.empty? && !(start_idx==idx)) && (
+      value = string.slice(start_idx, idx-start_idx)
+    )
     
     captures.store(idx, value)
     captures.store(captor.name, value)
