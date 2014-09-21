@@ -1,0 +1,10 @@
+
+BasicSpec {
+  name: "BytecodeInstructions"
+  
+  instructions: BytecodeInstructions { }
+  
+  [tests]
+  
+  it "exists":  assert(instructions)
+}

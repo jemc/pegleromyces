@@ -1,0 +1,83 @@
+
+BytecodeInstructions < EmptyObject {
+  
+  ##
+  # Basic Instructions
+  
+  # Test the character pointed to by the current index into the subject.
+  # Continue if the character |code| is equal, otherwise fail.
+  char: |code|
+    TODO
+  
+  # Move the instruction pointer forward by |label| instructions.
+  jump: |label|
+    TODO
+  
+  # Create a backtrack entry on the stack, pointing |label| instructions ahead.
+  choice: |label|
+    TODO
+  
+  # Push two-part return address onto the stack and goto start of |new_ipk|
+  call: |new_ipk|
+    TODO
+  
+  # Return from a call by popping the return address and jumping to it.
+  # It is assumed that the top of the stack is a return address from a :call.
+  return:
+    TODO
+  
+  # Pop and discard the backtrack entry from the stack and jump to |label|.
+  # It is assumed that the top of the stack is a backtrack entry from a :choice.
+  commit: |label|
+    TODO
+  
+  # Note the current subject index and the given metadata for post-processing.
+  capture: |metadata|
+    TODO
+  
+  # Pop the backtrack entry off the stack and copy the state from it,
+  # effectively pursuing the alternative posed by the last :choice.
+  handle_fail:
+    TODO
+  
+  ##
+  # Optimized Instructions
+  #
+  # These instructions could be expressed in terms of the Basic Instructions,
+  # but are more efficiently executed if given special implementations.
+  
+  # Signal a successful match at the end of the complete pattern
+  end:
+    TODO
+  
+  # Like char, but accept any char whose code is a valid key in |table|
+  charset: |table|
+    TODO
+  
+  # Like char, but accept any char whose code is between |start| and |end|
+  charrange: |start, end|
+    TODO
+  
+  # (Kleene star applied to a charset)
+  span: |table|
+    TODO
+  
+  # Match any character, |count| number of times.
+  any: |count|
+    TODO
+  
+  # Update the state for the backtrack entry on the top of the stack
+  # but don't change the fail address; then jump to |label|.
+  partial_commit: |label|
+    TODO
+  
+  # Pop the backtrack entry and restore state but jump to |label|
+  # instead of jumping to the popped fail address.
+  back_commit: |label|
+    TODO
+  
+  # Pop a backtrack entry off the stack and discard it, then fail.
+  fail_twice:
+    TODO
+  
+}

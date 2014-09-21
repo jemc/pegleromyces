@@ -1,0 +1,10 @@
+
+BasicSpec {
+  name: "BytecodeMachine"
+  
+  new_machine: BytecodeMachine { }
+  
+  [tests]
+  
+  it "exists":  assert(new_machine)
+}

@@ -22,11 +22,11 @@ Machine < BasicObject, Instructions {
   # The subject string as an array of character codes
   var subject: []
   
-  # The sequence of instructions to execute
+  # The sequence of instructions to execute for each rule name
   var sequence_table: Hash.new
   
   
-  # Execute the given instruction sequence over the given subject
+  # Execute the root rule instruction sequence over the given subject
   execute: loop {
     !ip && (handle_fail; true) || (
       (ip==true) && (break; true) || send(*sequence_table.fetch(ipk)[ip])
