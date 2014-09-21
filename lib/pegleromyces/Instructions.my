@@ -116,7 +116,7 @@ Instructions < EmptyObject {
   # but don't change the fail address; then jump to |label|.
   partial_commit: |label| {
     entry = stack.pop
-    stack.push([entry.first, idx, captures])
+    stack.push([entry.first, idx, captures.dup])
     self.ip = ip + label
   }
   
