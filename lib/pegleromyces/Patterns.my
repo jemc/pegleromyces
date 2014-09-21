@@ -79,9 +79,11 @@ Patterns < EmptyObject {
   
   Concatenation << {
     # Build a right-associative tree if the first operand of another choice
-    "+": |other| {
-      self.second = Concatenation.new(first:self.second, second:other)
-      self
+    "+": |other=false| {
+      other && (
+        self.second = Concatenation.new(first:self.second, second:other)
+        self
+      ) || OneOrMore.new(inner:self)
     }
   }
   
