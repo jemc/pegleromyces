@@ -1,8 +1,7 @@
 
-Grammar < Object, Patterns::ShorthandMethods {
+Grammar < BasicObject, Patterns::ShorthandMethods {
   
   Rule < Patterns::UnaryBase {
-    var inner
     construct_rule: inner.construct
     construct: RuleReference.new(name:name)
   }
@@ -14,7 +13,8 @@ Grammar < Object, Patterns::ShorthandMethods {
   
   var rule_table: Hash.new
   
-  on creation: rules.root
+  # Force evaluation of the rule tree by calling the root rule node
+  touch_root_rule: rules.root
   
   [decorators]
   var rule: Decorator {
