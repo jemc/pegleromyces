@@ -9,12 +9,22 @@ Processor < BasicObject {
   
   var cidx_stack: [] # A FILO stack of start indices for captures
   var midx_stack: [] # A FILO stack of start indices for multiplicit captures
+  var ridx_stack: [] # A FILO stack of start indices for reductions
   var capt_stack: [] # A FILO stack of Hashes with capture names, values
   
   pop_layer:  capt_stack.pop
   push_layer: capt_stack.push(::Hash.new)
   
-  process: push_layer; process_each; pop_layer
+  setup:
+    push_layer
+  
+  final_captures:
+    pop_layer
+      .select |k,v| { k.is_a?(Symbol) }
+      .map    |k,v| { [k,v.last] }
+      .to_h
+  
+  process: setup; process_each; final_captures
   
   process_each: capture_tokens.each |idx, metadata| {
     type   = metadata.first
@@ -31,16 +41,29 @@ Processor < BasicObject {
     captures = capt_stack.last
     start_idx = cidx_stack.pop
     
-    # Pick up the captured reduction
-    # If the reduction is not found and the string length is not zero
-    # slice the string with the given indices to get a text value
-    value = captures.fetch(idx) {
-      !(start_idx==idx) && string.slice(start_idx, idx-start_idx)
-    }
-    # p([captor.name, start_idx, idx, value])
+    # Pick up the captured reduction, if its start and end 
+    # indices are within the bounds we are looking for.
+    use_reduction = false
+    value = captures[idx]
+    value && (
+      loc = value.first
+      value = value.last
+      (loc.first>=start_idx) && (loc.last<=idx) && (
+        use_reduction = true
+      ) || (
+        value = null
+      )
+    )
     
-    captures.store(idx, value)
-    captures.store(captor.name, value)
+    # If the reduction is not found and the string length is not zero
+    # slice the string with the given indices to get a text value.
+    !use_reduction && !(start_idx==idx) && (
+      value = string.slice(start_idx, idx-start_idx)
+    )
+    
+    store_value = [[start_idx, idx], value]
+    captures.store(idx, store_value)
+    captures.store(captor.name, store_value)
   }
   
   m_start: |idx, captor| {
@@ -56,11 +79,17 @@ Processor < BasicObject {
   m_end: |idx, captor| {
     captures = capt_stack.last
     start_idx = midx_stack.pop
+    cidx_stack.pop # Discard cidx pushed by m_start/end calling c_start
     
     # Try to find a group of "anonymous" captures by index first
     value = []
     captures.each |k,v| {
-      (k.is_a?(Fixnum) && k<=idx && k>start_idx) && value.push(v)
+      (k.is_a?(Fixnum) && k<=idx && k>start_idx) && (
+        loc = v.first
+        (loc.first>=start_idx) && (
+          value.push(v.last)
+        )
+      )
     }
     
     # If the group is empty and the string length is not zero
@@ -69,25 +98,34 @@ Processor < BasicObject {
       value = string.slice(start_idx, idx-start_idx)
     )
     
-    captures.store(idx, value)
-    captures.store(captor.name, value)
+    store_value = [[start_idx, idx], value]
+    captures.store(idx, store_value)
+    captures.store(captor.name, store_value)
   }
   
   r_start: |idx, captor| (
     # Push a new layer of reduction context onto the stack
     push_layer
+    ridx_stack.push(idx)
   )
   
   r_end: |idx, captor| {
     captures = pop_layer
+    start_idx = ridx_stack.pop
+    
+    env_captures = captures
+      .select |k,v| { k.is_a?(Symbol) }
+      .map    |k,v| { [k,v.last] }
+      .to_h
     
     env = captor.new_environment
-    env.captures = captures
+    env.captures = env_captures
     env.builder = builder
     
     # The '!' operator on the environment invokes the action to get a value
     # Store with the string index as the key so the reduction can be captured
     value = !env
-    capt_stack.last.store(idx, value)
+    store_value = [[start_idx, idx], value]
+    capt_stack.last.store(idx, store_value)
   }
 }

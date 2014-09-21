@@ -134,15 +134,7 @@ Instructions < EmptyObject {
     self.stack.empty?
       && ErrorCondition.new
       || stack.pop
-    
-    self.stack.empty?
-      && ErrorCondition.new
-      || (
-        entry = stack.pop
-        self.captures = entry.pop # Pop each entry item
-        self.idx      = entry.pop # and restore it to the relevant variable
-        self.ip       = entry.pop # (popping implies reverse order)
-      )
+    handle_fail
   }
   
 }
