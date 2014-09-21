@@ -1,0 +1,55 @@
+
+BytecodeHelpers < BasicObject {
+  ##
+  # Bytecode Generation Helper Methods
+  
+  new_generator: ::Rubinius::ToolSets::Runtime::Generator.new
+  
+  var g: new_generator
+  
+  var overall_fail: g.new_label
+  
+  set_subject:   g.set_local  (0)
+  push_subject:  g.push_local (0)
+  set_idx:       g.set_local  (1)
+  push_idx:      g.push_local (1)
+  set_captures:  g.set_ivar   (:"@captures")
+  push_captures: g.push_ivar  (:"@captures")
+  
+  set_idx_and_pop: set_idx; g.pop
+  
+  # Increment the idx local by the current number at the top of the stack
+  increment_idx: {
+    push_idx
+    g.send(:"+", 1, false)
+    set_idx
+    g.pop
+  }
+  
+  start: {
+    # 2 argument: (subject, idx)
+    g.required_args = 2
+    g.total_args    = 2
+    g.splat_index   = null
+    
+    g.local_count = 2
+    g.local_names = [:subject, :idx]
+  }
+  
+  # Wrap up a compiled parser method
+  finish: {
+    overall_done = g.new_label
+    
+    # end
+    push_idx
+    g.goto(overall_done)
+    
+    # fail
+    overall_fail.set!
+    g.push_nil
+    
+    overall_done.set!
+    g.ret
+    g.close
+  }
+}

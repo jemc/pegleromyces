@@ -1,12 +1,34 @@
 
 BytecodeMachine < BasicObject, BytecodeInstructions {
-  # The subject string as an array of character codes
-  var subject: []
+  var subject: ""
+  var grammar: Grammar { }
   
-  # The sequence of instructions to execute for each rule name
-  var sequence_table: Hash.new
+  compile_worker: {
+    worker = EmptyObject { }
+    grammar.touch_root_rule
+    grammar.rule_table.each |name, rule| {
+      compile_rule_into(worker, name, rule)
+    }
+    worker
+  }
   
+  compile_rule_into: |worker, name, rule| {
+    construct = rule.construct_rule
+    
+    worker.component.dynamic_method(name, "(compiled parser)") |g| {
+      self.g = g
+      start
+      construct.bytecode(self)
+      finish
+    }
+  }
   
   # Execute the root rule instruction sequence over the given subject
-  execute: { }
+  execute: {
+    worker = compile_worker
+    # puts(worker.method(:root).executable.decode) # Print for debug
+    self.result = worker.root(subject, 0)
+  }
+  
+  var result
 }

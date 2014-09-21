@@ -1,83 +1,228 @@
+##
+# The following code is based on code from Pegarus by Brian Shirai.
+# A link to the code in question and the relevant license is reproduced below.
+# 
+# https://github.com/brixen/pegarus/blob/master/lib/pegarus/rubinius/compiler.rb
+# 
+# Copyright (c) 2014, Brian Shirai
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+# 3. Neither the name of the library nor the names of its contributors may be
+#    used to endorse or promote products derived from this software without
+#    specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-BytecodeInstructions < EmptyObject {
+import "BytecodeHelpers.my"
+
+
+# This set of instructions is not directly related to those in Instructions, as
+# those are not necessarily suitable for direct translation to the Rubinius VM.
+#
+BytecodeInstructions < EmptyObject, BytecodeHelpers {
   
-  ##
-  # Basic Instructions
+  Constructions::AnyCharacter    << { bytecode: |m| m.any(1) }
+  Constructions::Character       << { bytecode: |m| m.char(code.chr) }
+  Constructions::CharacterString << { bytecode: |m| m.char(codes.map(&:chr).join) }
+  Constructions::CharacterSet    << {
+    bytecode: |m| {
+      # TODO: Just add a set instruction to simplify this
+      code_a = codes.shift
+      a = Proc.new { m.char(code_a.chr) }
+      codes.each |code| {
+        b = Proc.new { m.char(code.chr) }
+        local_a = a.dup
+        local_b = b.dup
+        a = Proc.new { m.choice(local_a, local_b) }
+      }
+      a.call
+    }
+  }
+  Constructions::CharacterRange  << {
+    bytecode: |m| {
+      # TODO: Just add a range instruction to simplify this
+      codes = Range.new(start+1, end)
+      code_a = start
+      a = Proc.new { m.char(code_a.chr) }
+      codes.each |code| {
+        b = Proc.new { m.char(code.chr) }
+        local_a = a.dup
+        local_b = b.dup
+        a = Proc.new { m.choice(local_a, local_b) }
+      }
+      a.call
+    }
+  }
   
-  # Test the character pointed to by the current index into the subject.
-  # Continue if the character |code| is equal, otherwise fail.
-  char: |code|
-    TODO
-  
-  # Move the instruction pointer forward by |label| instructions.
-  jump: |label|
-    TODO
-  
-  # Create a backtrack entry on the stack, pointing |label| instructions ahead.
-  choice: |label|
-    TODO
-  
-  # Push two-part return address onto the stack and goto start of |new_ipk|
-  call: |new_ipk|
-    TODO
-  
-  # Return from a call by popping the return address and jumping to it.
-  # It is assumed that the top of the stack is a return address from a :call.
-  return:
-    TODO
-  
-  # Pop and discard the backtrack entry from the stack and jump to |label|.
-  # It is assumed that the top of the stack is a backtrack entry from a :choice.
-  commit: |label|
-    TODO
-  
-  # Note the current subject index and the given metadata for post-processing.
-  capture: |metadata|
-    TODO
-  
-  # Pop the backtrack entry off the stack and copy the state from it,
-  # effectively pursuing the alternative posed by the last :choice.
-  handle_fail:
-    TODO
-  
-  ##
-  # Optimized Instructions
-  #
-  # These instructions could be expressed in terms of the Basic Instructions,
-  # but are more efficiently executed if given special implementations.
-  
-  # Signal a successful match at the end of the complete pattern
-  end:
-    TODO
-  
-  # Like char, but accept any char whose code is a valid key in |table|
-  charset: |table|
-    TODO
-  
-  # Like char, but accept any char whose code is between |start| and |end|
-  charrange: |start, end|
-    TODO
-  
-  # (Kleene star applied to a charset)
-  span: |table|
-    TODO
+  Constructions::NegativePredicate << {
+    bytecode: |m|
+      m.neg_predicate(Proc.new { inner.bytecode(m) })
+  }
+  Constructions::PositivePredicate << {
+    bytecode: |m|
+      m.pos_predicate(Proc.new { inner.bytecode(m) })
+  }
+  Constructions::OneOrMore << {
+    bytecode: |m|
+      TODO
+  }
+  Constructions::ZeroOrOne << {
+    bytecode: |m| {
+      m.choice(
+        Proc.new { inner.bytecode(m) }
+        Proc.new { }
+      )
+    }
+  }
+  Constructions::ZeroOrMore << {
+    bytecode: |m|
+      TODO
+  }
+  Constructions::OrderedChoice << {
+    bytecode: |m| {
+      m.choice(
+        Proc.new { first.bytecode(m) }
+        Proc.new { second.bytecode(m) }
+      )
+    }
+  }
+  Constructions::Concatenation << {
+    bytecode: |m| {
+      first.bytecode(m)
+      second.bytecode(m)
+    }
+  }
   
   # Match any character, |count| number of times.
-  any: |count|
-    TODO
+  any: |count| {
+    push_idx
+    g.push(count)
+    g.send(:"+", 1, false)
+    
+    push_subject
+    g.send(:size, 0, false)
+    g.send(:"<=", 1, false)
+    g.goto_if_false(overall_fail)
+    
+    g.push(count)
+    increment_idx
+  }
   
-  # Update the state for the backtrack entry on the top of the stack
-  # but don't change the fail address; then jump to |label|.
-  partial_commit: |label|
-    TODO
+  # Match the given |string| of characters, one time.
+  char: |string| {
+    char_fail = g.new_label
+    char_done = g.new_label
+    
+    g.push_literal(string)
+    g.dup
+    g.send(:size, 0, false)
+    g.dup
+    g.move_down(2)
+    
+    push_subject
+    g.swap
+    push_idx
+    g.swap
+    g.send(:substring, 2, false)
+    g.send(:"==", 1, false)
+    g.goto_if_false(char_fail)
+    
+    increment_idx
+    g.goto(char_done)
+    
+    char_fail.set!
+    g.pop
+    g.goto(overall_fail)
+    
+    char_done.set!
+  }
   
-  # Pop the backtrack entry and restore state but jump to |label|
-  # instead of jumping to the popped fail address.
-  back_commit: |label|
-    TODO
+  # An ordered choice between |first| and |second|.
+  # Each argument should be a Proc that generates bytecode when called.
+  choice: |first, second| {
+    push_idx # store index, so that we can restart
+    old_fail = overall_fail
+    choice_done = g.new_label
+    
+    choice_fail = g.new_label
+    self.overall_fail = choice_fail
+    
+    first.call
+    
+    g.pop # success, pop index
+    self.overall_fail = old_fail # reset fail
+    g.goto(choice_done)
+    
+    choice_fail.set!
+    self.overall_fail = old_fail
+    set_idx_and_pop # reset index to the stored index
+    
+    second.call
+    
+    choice_done.set!
+  }
   
-  # Pop a backtrack entry off the stack and discard it, then fail.
-  fail_twice:
-    TODO
+  # Positive matching predicate that consumes no input.
+  # The argument should be a Proc that generates bytecode when called.
+  pos_predicate: |inner| {
+    push_idx # store index, so that we can restart
+    old_fail = overall_fail
+    predicate_done = g.new_label
+    
+    predicate_fail = g.new_label
+    self.overall_fail = predicate_fail
+    
+    inner.call
+    
+    # success
+    set_idx_and_pop # reset index to the stored index
+    self.overall_fail = old_fail # reset fail
+    g.goto(predicate_done)
+    
+    # failure
+    predicate_fail.set!
+    set_idx_and_pop # reset index to the stored index
+    self.overall_fail = old_fail
+    g.goto(overall_fail)
+    
+    predicate_done.set!
+  }
   
+  # Negative matching predicate that consumes no input.
+  # The argument should be a Proc that generates bytecode when called.
+  neg_predicate: |inner| {
+    push_idx # store index, so that we can restart
+    old_fail = overall_fail
+
+    pattern_fail = g.new_label
+    self.overall_fail = pattern_fail
+    
+    inner.call
+    
+    # success => failure
+    set_idx_and_pop # reset index to the stored index
+    self.overall_fail = old_fail # reset fail
+    g.goto(overall_fail)
+    # failure => success
+    pattern_fail.set!
+    set_idx_and_pop # reset index to the stored index
+    self.overall_fail = old_fail
+  }
 }

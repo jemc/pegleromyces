@@ -4,7 +4,18 @@ BasicSpec {
   
   new_machine: BytecodeMachine { }
   
+  tiny_grammar: Grammar {
+    [rules]
+    rule root: str('abc') / str('x') + set('Yy') + !str('y') + !!str('z') + any
+  }
+  
   [tests]
   
-  it "exists":  assert(new_machine)
+  it "can match from a tiny grammar": {
+    machine = new_machine
+    machine.grammar = tiny_grammar
+    machine.subject = 'xyz'
+    machine.execute
+    assert_equal(machine.result, 3)
+  }
 }
