@@ -133,12 +133,22 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
   # Match if the character is included in the given |string|, one time.
   set: |string| {
     set_done = g.new_label
+    set_early_fail = g.new_label
     
     g.push_literal(string)
       push_subject_at_idx
+      g.dup_top
+      g.goto_if_false(set_early_fail)
     g.send(:"include?", 1, false)
     g.goto_if_false(overall_fail)
+    g.goto(set_done)
     
+    set_early_fail.set!
+    g.pop # pop literal string
+    g.pop # pop subject_at_idx
+    g.goto(overall_fail)
+    
+    set_done.set!
     g.push(1)
     increment_idx
   }
