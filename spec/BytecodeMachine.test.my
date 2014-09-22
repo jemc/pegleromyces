@@ -1,4 +1,6 @@
 
+import 'fixtures/MycoGrammar.my'
+
 BasicSpec {
   name: "BytecodeMachine"
   
@@ -45,8 +47,37 @@ BasicSpec {
       rule any_lower: !!lower + any
     }
     machine.subject = 'xyz'
-    machine.grammar.construct_all_rules
     machine.execute
     assert_equal(machine.result, 3)
+  }
+  
+  it "can match from the Myco grammar": {
+    machine = new_machine
+    machine.grammar = MycoGrammar
+    machine.subject = '
+    Object {
+      foo:    one
+      bar  :  Two  
+      baz    :3
+      deci  : 3.88
+      ary :  [1,2, 3,
+              4
+              5,,
+              6
+              
+              7,
+             ]
+      all:null
+      none:void
+      str  : "string"
+      sym  :  :bol
+      ssym : :"with spaces"
+      s  :  self
+      t:    true
+      f:    false
+      "x y" : z
+    }'
+    machine.execute
+    assert(machine.result)
   }
 }
