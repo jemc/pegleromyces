@@ -69,7 +69,7 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
   }
   Constructions::ZeroOrMore << {
     bytecode: |m|
-      TODO
+      m.kleene(Proc.new { inner.bytecode(m) })
   }
   Constructions::OrderedChoice << {
     bytecode: |m| {
@@ -147,10 +147,9 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
   # Each argument should be a Proc that generates bytecode when called.
   choice: |first, second| {
     push_idx # store index, so that we can restart
-    old_fail = overall_fail
     choice_done = g.new_label
-    
     choice_fail = g.new_label
+    old_fail = overall_fail
     self.overall_fail = choice_fail
     
     first.call
@@ -166,6 +165,24 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     second.call
     
     choice_done.set!
+  }
+  
+  # Keep consuming |inner| until it doesn't match; it will not cause backtrack.
+  # The argument should be a Proc that generates bytecode when called.
+  kleene: |inner| {
+    kleene_retry = g.new_label
+    kleene_fail = g.new_label
+    old_fail = overall_fail
+    self.overall_fail = kleene_fail
+    
+    kleene_retry.set!
+    inner.call
+    
+    # success, try again
+    g.goto(kleene_retry)
+    
+    kleene_fail.set!
+    self.overall_fail = old_fail # reset fail
   }
   
   # Positive matching predicate that consumes no input.

@@ -10,12 +10,26 @@ BasicSpec {
       str('abc') / str('x') + set('Yy') + !str('y') + !!range('a','z') + any
   }
   
+  multiplicit_grammar: Grammar {
+    [rules]
+    rule root:
+      str('x').* + str('y').* + str('z').*
+  }
+  
   [tests]
   
   it "can match from a tiny grammar": {
     machine = new_machine
     machine.grammar = tiny_grammar
     machine.subject = 'xyz'
+    machine.execute
+    assert_equal(machine.result, 3)
+  }
+  
+  it "can match from a grammar with multiplicit patterns": {
+    machine = new_machine
+    machine.grammar = multiplicit_grammar
+    machine.subject = 'xxz'
     machine.execute
     assert_equal(machine.result, 3)
   }
