@@ -57,7 +57,7 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
   }
   Constructions::OneOrMore << {
     bytecode: |m|
-      TODO
+      m.many(Proc.new { inner.bytecode(m) })
   }
   Constructions::ZeroOrOne << {
     bytecode: |m| {
@@ -175,6 +175,30 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     second.call
     
     choice_done.set!
+  }
+  
+  # Keep consuming |inner| until it doesn't match; it must match at least one.
+  # The argument should be a Proc that generates bytecode when called.
+  many: |inner| {
+    many_retry = g.new_label
+    many_fail = g.new_label
+    old_fail = overall_fail
+    self.overall_fail = many_fail
+    # push a false to indicate that no matches have ocurred yet
+    g.push_false
+    
+    many_retry.set!
+    inner.call
+    
+    # success, pop and push a true to indicate at least one match and try again
+    g.pop; g.push_true
+    g.goto(many_retry)
+    
+    many_fail.set!
+    self.overall_fail = old_fail # reset fail
+    
+    # If at least one match was not found, it is an overall failure
+    g.goto_if_false(overall_fail)
   }
   
   # Keep consuming |inner| until it doesn't match; it will not cause backtrack.
