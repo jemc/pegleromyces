@@ -86,6 +86,8 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     }
   }
   
+  
+  
   # Match any character, |count| number of times.
   any: |count| {
     push_idx
@@ -95,7 +97,7 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     push_subject
     g.send(:size, 0, false)
     g.send(:"<=", 1, false)
-    g.goto_if_false(overall_fail)
+    g.goto_if_false(g.overall_fail)
     
     g.push(count)
     increment_idx
@@ -125,7 +127,7 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     
     char_fail.set!
     g.pop
-    g.goto(overall_fail)
+    g.goto(g.overall_fail)
     
     char_done.set!
   }
@@ -140,13 +142,13 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
       g.dup_top
       g.goto_if_false(set_early_fail)
     g.send(:"include?", 1, false)
-    g.goto_if_false(overall_fail)
+    g.goto_if_false(g.overall_fail)
     g.goto(set_done)
     
     set_early_fail.set!
     g.pop # pop literal string
     g.pop # pop subject_at_idx
-    g.goto(overall_fail)
+    g.goto(g.overall_fail)
     
     set_done.set!
     g.push(1)
@@ -159,17 +161,17 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     push_idx # store index, so that we can restart
     choice_done = g.new_label
     choice_fail = g.new_label
-    old_fail = overall_fail
-    self.overall_fail = choice_fail
+    old_fail = g.overall_fail
+    g.overall_fail = choice_fail
     
     first.call
     
     g.pop # success, pop index
-    self.overall_fail = old_fail # reset fail
+    g.overall_fail = old_fail # reset fail
     g.goto(choice_done)
     
     choice_fail.set!
-    self.overall_fail = old_fail
+    g.overall_fail = old_fail
     set_idx_and_pop # reset index to the stored index
     
     second.call
@@ -182,8 +184,8 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
   many: |inner| {
     many_retry = g.new_label
     many_fail = g.new_label
-    old_fail = overall_fail
-    self.overall_fail = many_fail
+    old_fail = g.overall_fail
+    g.overall_fail = many_fail
     # push a false to indicate that no matches have ocurred yet
     g.push_false
     
@@ -195,10 +197,10 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     g.goto(many_retry)
     
     many_fail.set!
-    self.overall_fail = old_fail # reset fail
+    g.overall_fail = old_fail # reset fail
     
     # If at least one match was not found, it is an overall failure
-    g.goto_if_false(overall_fail)
+    g.goto_if_false(g.overall_fail)
   }
   
   # Keep consuming |inner| until it doesn't match; it will not cause backtrack.
@@ -206,8 +208,8 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
   kleene: |inner| {
     kleene_retry = g.new_label
     kleene_fail = g.new_label
-    old_fail = overall_fail
-    self.overall_fail = kleene_fail
+    old_fail = g.overall_fail
+    g.overall_fail = kleene_fail
     
     kleene_retry.set!
     inner.call
@@ -216,31 +218,31 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     g.goto(kleene_retry)
     
     kleene_fail.set!
-    self.overall_fail = old_fail # reset fail
+    g.overall_fail = old_fail # reset fail
   }
   
   # Positive matching predicate that consumes no input.
   # The argument should be a Proc that generates bytecode when called.
   pos_predicate: |inner| {
     push_idx # store index, so that we can restart
-    old_fail = overall_fail
+    old_fail = g.overall_fail
     predicate_done = g.new_label
     
     predicate_fail = g.new_label
-    self.overall_fail = predicate_fail
+    g.overall_fail = predicate_fail
     
     inner.call
     
     # success
     set_idx_and_pop # reset index to the stored index
-    self.overall_fail = old_fail # reset fail
+    g.overall_fail = old_fail # reset fail
     g.goto(predicate_done)
     
     # failure
     predicate_fail.set!
     set_idx_and_pop # reset index to the stored index
-    self.overall_fail = old_fail
-    g.goto(overall_fail)
+    g.overall_fail = old_fail
+    g.goto(g.overall_fail)
     
     predicate_done.set!
   }
@@ -249,20 +251,39 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
   # The argument should be a Proc that generates bytecode when called.
   neg_predicate: |inner| {
     push_idx # store index, so that we can restart
-    old_fail = overall_fail
+    old_fail = g.overall_fail
 
     pattern_fail = g.new_label
-    self.overall_fail = pattern_fail
+    g.overall_fail = pattern_fail
     
     inner.call
     
     # success => failure
     set_idx_and_pop # reset index to the stored index
-    self.overall_fail = old_fail # reset fail
-    g.goto(overall_fail)
+    g.overall_fail = old_fail # reset fail
+    g.goto(g.overall_fail)
     # failure => success
     pattern_fail.set!
     set_idx_and_pop # reset index to the stored index
-    self.overall_fail = old_fail
+    g.overall_fail = old_fail
+  }
+  
+  # Call the compiled rule by |name| and continue or fail based on the result.
+  call: |name| {
+    call_fail = g.new_label
+    call_done = g.new_label
+    
+    g.push_self
+      push_subject
+      push_idx
+    g.send(name, 2, false)
+    g.dup_top # duplicate the result so one will be left after the if_true check
+    g.goto_if_true(call_done)
+    
+    g.pop # pop the duplicated result - it's not needed in failure
+    g.goto(g.overall_fail)
+    
+    call_done.set!
+    set_idx_and_pop # set to the new index given by the call's return value
   }
 }

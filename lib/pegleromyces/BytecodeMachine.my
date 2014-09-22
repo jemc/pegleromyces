@@ -5,7 +5,7 @@ BytecodeMachine < BasicObject, BytecodeInstructions {
   
   compile_worker: {
     worker = EmptyObject { }
-    grammar.touch_root_rule
+    grammar.construct_all_rules
     grammar.rule_table.each |name, rule| {
       compile_rule_into(worker, name, rule)
     }
@@ -17,6 +17,8 @@ BytecodeMachine < BasicObject, BytecodeInstructions {
     
     worker.component.dynamic_method(name, "(compiled parser)") |g| {
       self.g = g
+      g.extend(BytecodeGeneratorExtension)
+      
       start
       construct.bytecode(self)
       finish
@@ -26,7 +28,7 @@ BytecodeMachine < BasicObject, BytecodeInstructions {
   # Execute the root rule instruction sequence over the given subject
   execute: {
     worker = compile_worker
-    # puts(worker.method(:root).executable.decode) # Print for debug
+    # puts(worker.method(:unintended).executable.decode) # Print for debug
     self.result = worker.root(subject, 0)
   }
   

@@ -5,9 +5,11 @@ BytecodeHelpers < BasicObject {
   
   new_generator: ::Rubinius::ToolSets::Runtime::Generator.new
   
-  var g: new_generator
+  BytecodeGeneratorExtension < BasicObject {
+    var overall_fail: new_label
+  }
   
-  var overall_fail: g.new_label
+  var g: new_generator
   
   set_subject:   g.set_local  (0)
   push_subject:  g.push_local (0)
@@ -47,7 +49,7 @@ BytecodeHelpers < BasicObject {
     g.goto(overall_done)
     
     # fail
-    overall_fail.set!
+    g.overall_fail.set!
     g.push_nil
     
     overall_done.set!

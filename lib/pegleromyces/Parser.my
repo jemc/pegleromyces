@@ -7,7 +7,7 @@ Parser < BasicObject {
   var result: null
   
   memoize make_sequence_table: |grammar| {
-    grammar.touch_root_rule
+    grammar.construct_all_rules
     grammar.rule_table.map |k,v| {
       [k, v.construct_rule.sequence + [[:return]]]
     }.to_h

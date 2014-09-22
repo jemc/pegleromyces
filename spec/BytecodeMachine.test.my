@@ -4,23 +4,15 @@ BasicSpec {
   
   new_machine: BytecodeMachine { }
   
-  tiny_grammar: Grammar {
-    [rules]
-    rule root:
-      str('abc') / str('x') + set('Yy') + !str('y') + !!range('a','z') + any
-  }
-  
-  multiplicit_grammar: Grammar {
-    [rules]
-    rule root:
-      str('x').+ + str('y').* + str('z').-
-  }
-  
   [tests]
   
   it "can match from a tiny grammar": {
     machine = new_machine
-    machine.grammar = tiny_grammar
+    machine.grammar = Grammar {
+      [rules]
+      rule root:
+        str('abc') / str('x') + set('Yy') + !str('y') + !!range('a','z') + any
+    }
     machine.subject = 'xyz'
     machine.execute
     assert_equal(machine.result, 3)
@@ -28,8 +20,32 @@ BasicSpec {
   
   it "can match from a grammar with multiplicit patterns": {
     machine = new_machine
-    machine.grammar = multiplicit_grammar
+    machine.grammar = Grammar {
+      [rules]
+      rule root: str('x').+ + str('y').* + str('z').-
+    }
     machine.subject = 'xxz'
+    machine.execute
+    assert_equal(machine.result, 3)
+  }
+  
+  it "can match from a grammar with rule calls": {
+    machine = new_machine
+    machine.grammar = Grammar {
+      [rules]
+      rule root: unintended / intended
+      rule unintended: abc
+      rule intended: x + any_y + not_y + any_lower
+      
+      rule abc:   str('abc')
+      rule x:     str('x')
+      rule any_y: set('Yy')
+      rule not_y: !str('y')
+      rule lower: range('a','z')
+      rule any_lower: !!lower + any
+    }
+    machine.subject = 'xyz'
+    machine.grammar.construct_all_rules
     machine.execute
     assert_equal(machine.result, 3)
   }

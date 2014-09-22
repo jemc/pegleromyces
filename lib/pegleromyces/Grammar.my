@@ -9,12 +9,26 @@ Grammar < BasicObject, Patterns::ShorthandMethods {
   RuleReference < Constructions::UnaryBase {
     var name
     sequence: [[:call, name]]
+    bytecode: |m| m.call(name)
   }
   
   var rule_table: Hash.new
+  var rule_table: Hash.new
   
-  # Force evaluation of the rule tree by calling the root rule node
-  touch_root_rule: rules.root
+  # Force evaluation of the rule tree in a way that
+  # doesn't get stuck in an infinite recursion.
+  construct_all_rules: {
+    rules.root.construct_rule
+    seen_keys = []
+    loop {
+      new_keys = rule_table.keys - seen_keys
+      new_keys.empty? && break
+      new_keys.each |key| {
+        rule_table[key].construct_rule
+        seen_keys.push(key)
+      }
+    }
+  }
   
   [decorators]
   var rule: Decorator {
