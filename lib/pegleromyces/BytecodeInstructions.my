@@ -38,54 +38,51 @@ import "BytecodeHelpers.my"
 #
 BytecodeInstructions < EmptyObject {
   
-  Constructions::AnyCharacter    << { bytecode: |m| m.any(1) }
-  Constructions::Character       << { bytecode: |m| m.char(code.chr) }
-  Constructions::CharacterString << { bytecode: |m| m.char(codes.map(&:chr).join) }
-  Constructions::CharacterSet    << { bytecode: |m| m.set(codes.map(&:chr).join) }
-  Constructions::CharacterRange  << {
-    bytecode: |m|
+  Constructions << {
+    AnyCharacter    << { bytecode: |m| m.any(1) }
+    Character       << { bytecode: |m| m.char(code.chr) }
+    CharacterString << { bytecode: |m| m.char(codes.map(&:chr).join) }
+    CharacterSet    << { bytecode: |m| m.set(codes.map(&:chr).join) }
+    CharacterRange  << { bytecode: |m|
       codes = Range.new(start,end); m.set(codes.map(&:chr).join)
-  }
-  
-  Constructions::NegativePredicate << {
-    bytecode: |m|
+    }
+    
+    NegativePredicate << { bytecode: |m|
       m.neg_predicate(Proc.new { inner.bytecode(m) })
-  }
-  Constructions::PositivePredicate << {
-    bytecode: |m|
+    }
+    PositivePredicate << { bytecode: |m|
       m.pos_predicate(Proc.new { inner.bytecode(m) })
-  }
-  Constructions::OneOrMore << {
-    bytecode: |m|
+    }
+    OneOrMore << { bytecode: |m|
       m.many(Proc.new { inner.bytecode(m) })
-  }
-  Constructions::ZeroOrOne << {
-    bytecode: |m| {
-      m.choice(
-        Proc.new { inner.bytecode(m) }
-        Proc.new { }
-      )
     }
-  }
-  Constructions::ZeroOrMore << {
-    bytecode: |m|
+    ZeroOrOne << {
+      bytecode: |m| {
+        m.choice(
+          Proc.new { inner.bytecode(m) }
+          Proc.new { }
+        )
+      }
+    }
+    ZeroOrMore << { bytecode: |m|
       m.kleene(Proc.new { inner.bytecode(m) })
-  }
-  Constructions::OrderedChoice << {
-    bytecode: |m| {
-      m.choice(
-        Proc.new { first.bytecode(m) }
-        Proc.new { second.bytecode(m) }
-      )
     }
-  }
-  Constructions::Concatenation << {
-    bytecode: |m| {
-      first.bytecode(m)
-      second.bytecode(m)
+    OrderedChoice << {
+      bytecode: |m| {
+        m.choice(
+          Proc.new { first.bytecode(m) }
+          Proc.new { second.bytecode(m) }
+        )
+      }
     }
+    Concatenation << { bytecode: |m|
+      first.bytecode(m); second.bytecode(m)
+    }
+    
+    # TODO: Implement these
+    NamedCapture << { bytecode: |m| inner.bytecode(m) }
+    Reduction    << { bytecode: |m| inner.bytecode(m) }
   }
-  
   
   
   # Match any character, |count| number of times.
