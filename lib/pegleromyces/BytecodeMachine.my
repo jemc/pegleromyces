@@ -3,6 +3,8 @@ BytecodeMachine < BasicObject, BytecodeInstructions {
   var subject: ""
   var grammar: Grammar { }
   
+  var g # TODO: remove and localize so that rules can be compiled in parallel
+  
   compile_worker: {
     worker = EmptyObject { }
     grammar.construct_all_rules
@@ -17,11 +19,11 @@ BytecodeMachine < BasicObject, BytecodeInstructions {
     
     worker.component.dynamic_method(name, "(compiled parser)") |g| {
       self.g = g
-      g.extend(BytecodeGeneratorExtension)
+      g.extend(BytecodeHelpers)
       
-      start
+      g.rule_start
       construct.bytecode(self)
-      finish
+      g.rule_finish
     }
   }
   

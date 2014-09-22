@@ -36,7 +36,7 @@ import "BytecodeHelpers.my"
 # This set of instructions is not directly related to those in Instructions, as
 # those are not necessarily suitable for direct translation to the Rubinius VM.
 #
-BytecodeInstructions < EmptyObject, BytecodeHelpers {
+BytecodeInstructions < EmptyObject {
   
   Constructions::AnyCharacter    << { bytecode: |m| m.any(1) }
   Constructions::Character       << { bytecode: |m| m.char(code.chr) }
@@ -90,17 +90,17 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
   
   # Match any character, |count| number of times.
   any: |count| {
-    push_idx
+    g.push_idx
     g.push(count)
     g.send(:"+", 1, false)
     
-    push_subject
+    g.push_subject
     g.send(:size, 0, false)
     g.send(:"<=", 1, false)
     g.goto_if_false(g.overall_fail)
     
     g.push(count)
-    increment_idx
+    g.increment_idx
   }
   
   # Match the given |string| of characters, one time.
@@ -114,15 +114,15 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     g.dup
     g.move_down(2)
     
-    push_subject
+    g.push_subject
     g.swap
-    push_idx
+    g.push_idx
     g.swap
     g.send(:substring, 2, false)
     g.send(:"==", 1, false)
     g.goto_if_false(char_fail)
     
-    increment_idx
+    g.increment_idx
     g.goto(char_done)
     
     char_fail.set!
@@ -138,7 +138,7 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     set_early_fail = g.new_label
     
     g.push_literal(string)
-      push_subject_at_idx
+      g.push_subject_at_idx
       g.dup_top
       g.goto_if_false(set_early_fail)
     g.send(:"include?", 1, false)
@@ -152,13 +152,13 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     
     set_done.set!
     g.push(1)
-    increment_idx
+    g.increment_idx
   }
   
   # An ordered choice between |first| and |second|.
   # Each argument should be a Proc that generates bytecode when called.
   choice: |first, second| {
-    push_idx # store index, so that we can restart
+    g.push_idx # store index, so that we can restart
     choice_done = g.new_label
     choice_fail = g.new_label
     old_fail = g.overall_fail
@@ -172,7 +172,7 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     
     choice_fail.set!
     g.overall_fail = old_fail
-    set_idx_and_pop # reset index to the stored index
+    g.set_idx_and_pop # reset index to the stored index
     
     second.call
     
@@ -224,7 +224,7 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
   # Positive matching predicate that consumes no input.
   # The argument should be a Proc that generates bytecode when called.
   pos_predicate: |inner| {
-    push_idx # store index, so that we can restart
+    g.push_idx # store index, so that we can restart
     old_fail = g.overall_fail
     predicate_done = g.new_label
     
@@ -234,13 +234,13 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     inner.call
     
     # success
-    set_idx_and_pop # reset index to the stored index
+    g.set_idx_and_pop # reset index to the stored index
     g.overall_fail = old_fail # reset fail
     g.goto(predicate_done)
     
     # failure
     predicate_fail.set!
-    set_idx_and_pop # reset index to the stored index
+    g.set_idx_and_pop # reset index to the stored index
     g.overall_fail = old_fail
     g.goto(g.overall_fail)
     
@@ -250,7 +250,7 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
   # Negative matching predicate that consumes no input.
   # The argument should be a Proc that generates bytecode when called.
   neg_predicate: |inner| {
-    push_idx # store index, so that we can restart
+    g.push_idx # store index, so that we can restart
     old_fail = g.overall_fail
 
     pattern_fail = g.new_label
@@ -259,12 +259,12 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     inner.call
     
     # success => failure
-    set_idx_and_pop # reset index to the stored index
+    g.set_idx_and_pop # reset index to the stored index
     g.overall_fail = old_fail # reset fail
     g.goto(g.overall_fail)
     # failure => success
     pattern_fail.set!
-    set_idx_and_pop # reset index to the stored index
+    g.set_idx_and_pop # reset index to the stored index
     g.overall_fail = old_fail
   }
   
@@ -274,8 +274,8 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     call_done = g.new_label
     
     g.push_self
-      push_subject
-      push_idx
+      g.push_subject
+      g.push_idx
     g.send(name, 2, false)
     g.dup_top # duplicate the result so one will be left after the if_true check
     g.goto_if_true(call_done)
@@ -284,6 +284,6 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     g.goto(g.overall_fail)
     
     call_done.set!
-    set_idx_and_pop # set to the new index given by the call's return value
+    g.set_idx_and_pop # set to the new index given by the call's return value
   }
 }
