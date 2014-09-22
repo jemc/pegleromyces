@@ -6,7 +6,8 @@ BasicSpec {
   
   tiny_grammar: Grammar {
     [rules]
-    rule root: str('abc') / str('x') + set('Yy') + !str('y') + !!str('z') + any
+    rule root:
+      str('abc') / str('x') + set('Yy') + !str('y') + !!range('a','z') + any
   }
   
   [tests]

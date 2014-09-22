@@ -41,34 +41,10 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
   Constructions::AnyCharacter    << { bytecode: |m| m.any(1) }
   Constructions::Character       << { bytecode: |m| m.char(code.chr) }
   Constructions::CharacterString << { bytecode: |m| m.char(codes.map(&:chr).join) }
-  Constructions::CharacterSet    << {
-    bytecode: |m| {
-      # TODO: Just add a set instruction to simplify this
-      code_a = codes.shift
-      a = Proc.new { m.char(code_a.chr) }
-      codes.each |code| {
-        b = Proc.new { m.char(code.chr) }
-        local_a = a.dup
-        local_b = b.dup
-        a = Proc.new { m.choice(local_a, local_b) }
-      }
-      a.call
-    }
-  }
+  Constructions::CharacterSet    << { bytecode: |m| m.set(codes.map(&:chr).join) }
   Constructions::CharacterRange  << {
-    bytecode: |m| {
-      # TODO: Just add a range instruction to simplify this
-      codes = Range.new(start+1, end)
-      code_a = start
-      a = Proc.new { m.char(code_a.chr) }
-      codes.each |code| {
-        b = Proc.new { m.char(code.chr) }
-        local_a = a.dup
-        local_b = b.dup
-        a = Proc.new { m.choice(local_a, local_b) }
-      }
-      a.call
-    }
+    bytecode: |m|
+      codes = Range.new(start,end); m.set(codes.map(&:chr).join)
   }
   
   Constructions::NegativePredicate << {
@@ -152,6 +128,19 @@ BytecodeInstructions < EmptyObject, BytecodeHelpers {
     g.goto(overall_fail)
     
     char_done.set!
+  }
+  
+  # Match if the character is included in the given |string|, one time.
+  set: |string| {
+    set_done = g.new_label
+    
+    g.push_literal(string)
+      push_subject_at_idx
+    g.send(:"include?", 1, false)
+    g.goto_if_false(overall_fail)
+    
+    g.push(1)
+    increment_idx
   }
   
   # An ordered choice between |first| and |second|.
