@@ -113,15 +113,15 @@ BytecodeInstructions < EmptyObject {
   # Match any character, |count| number of times.
   any: |count| {
     g.push_idx
-    g.push(count)
-    g.send(:"+", 1, false)
+    g.push_int(count)
+    g.send(:"+", 1)
     
     g.push_subject
-    g.send(:size, 0, false)
-    g.send(:"<=", 1, false)
+    g.send(:size, 0)
+    g.send(:"<=", 1)
     g.goto_if_false(g.overall_fail)
     
-    g.push(count)
+    g.push_int(count)
     g.increment_idx
   }
   
@@ -132,7 +132,7 @@ BytecodeInstructions < EmptyObject {
     
     g.push_literal(string)
     g.dup
-    g.send(:size, 0, false)
+    g.send(:size, 0)
     g.dup
     g.move_down(2)
     
@@ -140,8 +140,8 @@ BytecodeInstructions < EmptyObject {
     g.swap
     g.push_idx
     g.swap
-    g.send(:substring, 2, false)
-    g.send(:"==", 1, false)
+    g.send(:substring, 2)
+    g.send(:"==", 1)
     g.goto_if_false(local_fail)
     
     g.increment_idx
@@ -163,7 +163,7 @@ BytecodeInstructions < EmptyObject {
       g.push_subject_at_idx
       g.dup_top
       g.goto_if_false(local_early_fail)
-    g.send(:"include?", 1, false)
+    g.send(:"include?", 1)
     g.goto_if_false(g.overall_fail)
     g.goto(local_done)
     
@@ -173,7 +173,7 @@ BytecodeInstructions < EmptyObject {
     g.goto(g.overall_fail)
     
     local_done.set!
-    g.push(1)
+    g.meta_push_1
     g.increment_idx
   }
   
@@ -215,7 +215,7 @@ BytecodeInstructions < EmptyObject {
     local_fail = g.new_label
     old_fail = g.overall_fail
     g.overall_fail = local_fail
-    # push a false to indicate that no matches have ocurred yet
+    # push a false to indicate that no matches have occurred yet
     g.push_false
     
     local_retry.set!
@@ -313,7 +313,7 @@ BytecodeInstructions < EmptyObject {
     g.push_self
       g.push_subject
       g.push_idx
-    g.send(name, 2, false)
+    g.send(name, 2)
     g.dup_top # duplicate the result so one will be left after the if_true check
     g.goto_if_true(local_done)
     
