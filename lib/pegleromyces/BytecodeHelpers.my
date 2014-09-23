@@ -14,11 +14,20 @@ BytecodeHelpers < BasicObject {
   set_captures:  g.set_ivar   (:"@captures")
   push_captures: g.push_ivar  (:"@captures")
   
-  set_idx_and_pop:      g.set_idx;      g.pop
-  set_captures_and_pop: g.set_captures; g.pop
-  push_captures_dup:    g.push_captures; g.send(:dup, 0)
+  pop_to_set_idx:
+    g.set_idx; g.pop
   
-  push_subject_at_idx: g.push_subject; g.push_idx; g.send(:chr_at, 1)
+  push_temp_captures:
+    g.push_captures; g.make_array(0); g.set_captures; g.pop
+  
+  pop_to_reject_captures:
+    g.set_captures; g.pop
+  
+  pop_to_accept_captures:
+    g.push_captures; g.send(:concat, 1); g.set_captures; g.pop
+  
+  push_subject_at_idx:
+    g.push_subject; g.push_idx; g.send(:chr_at, 1)
   
   # Increment the idx local by the current number at the top of the stack
   increment_idx: {

@@ -186,21 +186,21 @@ BytecodeInstructions < EmptyObject {
     g.overall_fail = local_fail
     
     # Store index and captures for backtracking in case of failure
-    g.push_captures_dup
+    g.push_temp_captures
     g.push_idx
     
     first.call
     
     # Success, throw away backtrack entry
     g.pop # keep idx
-    g.pop # keep captures
+    g.pop_to_accept_captures
     g.overall_fail = old_fail # reset fail
     g.goto(local_done)
     
     # Failure, backtrack index and captures
     local_fail.set!
-    g.set_idx_and_pop
-    g.set_captures_and_pop
+    g.pop_to_set_idx
+    g.pop_to_reject_captures
     g.overall_fail = old_fail
     
     second.call
@@ -259,21 +259,21 @@ BytecodeInstructions < EmptyObject {
     g.overall_fail = local_fail
     
     # Store index and captures for backtracking
-    g.push_captures_dup
+    g.push_temp_captures
     g.push_idx
     
     inner.call
     
     # Success, but do not consume input, so backtrack index but keep captures
-    g.set_idx_and_pop
-    g.pop # keep captures
+    g.pop_to_set_idx
+    g.pop_to_accept_captures
     g.overall_fail = old_fail # reset fail
     g.goto(local_done)
     
     # Failure, backtrack index and captures
     local_fail.set!
-    g.set_idx_and_pop
-    g.set_captures_and_pop
+    g.pop_to_set_idx
+    g.pop_to_reject_captures
     g.overall_fail = old_fail
     g.goto(g.overall_fail)
     
@@ -288,21 +288,21 @@ BytecodeInstructions < EmptyObject {
     g.overall_fail = local_fail
     
     # Store index and captures for backtracking
-    g.push_captures_dup
+    g.push_temp_captures
     g.push_idx
     
     inner.call
     
     # Success => Failure, backtrack index and captures
-    g.set_idx_and_pop
-    g.set_captures_and_pop
+    g.pop_to_set_idx
+    g.pop_to_reject_captures
     g.overall_fail = old_fail # reset fail
     g.goto(g.overall_fail)
     
     # Failure => Success, backtrack index but keep captures
     local_fail.set!
-    g.set_idx_and_pop
-    g.pop # keep captures
+    g.pop_to_set_idx
+    g.pop_to_accept_captures
     g.overall_fail = old_fail
   }
   
@@ -321,7 +321,7 @@ BytecodeInstructions < EmptyObject {
     g.goto(g.overall_fail)
     
     local_done.set!
-    g.set_idx_and_pop # set to the new index given by the call's return value
+    g.pop_to_set_idx # set to the new index given by the call's return value
   }
   
   capture: |metadata| {
