@@ -15,8 +15,7 @@ BasicSpec {
       rule root:
         str('abc') / str('x') + set('Yy') + !str('y') + !!range('a','z') + any
     }
-    parser.subject = 'xyz'
-    parser.execute
+    parser.parse('xyz')
     assert_equal(parser.result, 3)
   }
   
@@ -26,8 +25,7 @@ BasicSpec {
       [rules]
       rule root: str('x').+ + str('y').* + str('z').-
     }
-    parser.subject = 'xxz'
-    parser.execute
+    parser.parse('xxz')
     assert_equal(parser.result, 3)
   }
   
@@ -46,15 +44,14 @@ BasicSpec {
       rule lower: range('a','z')
       rule any_lower: !!lower + any
     }
-    parser.subject = 'xyz'
-    parser.execute
+    parser.parse('xyz')
     assert_equal(parser.result, 3)
   }
   
   it "can match from the Myco grammar": {
     parser = new_parser
     parser.grammar = MycoGrammar
-    parser.subject = '
+    string = '
     Object {
       foo:    one
       bar  :  Two  
@@ -77,7 +74,7 @@ BasicSpec {
       f:    false
       "x y" : z
     }'
-    parser.execute
+    parser.parse(string)
     assert(parser.result)
   }
 }

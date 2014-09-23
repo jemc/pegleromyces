@@ -1,6 +1,5 @@
 
 BytecodeParser < BasicObject {
-  var subject: ""
   var grammar: Grammar { }
   
   new_worker: set_up_worker(prototype.new)
@@ -38,10 +37,10 @@ BytecodeParser < BasicObject {
   captures_of_worker: |worker|
     worker.instance_variable_get(:"@captures")
   
-  # Execute the root rule instruction sequence over the given subject
-  execute: {
+  # Parse the given string using the current grammar
+  parse: |string| {
     worker = new_worker
-    self.result = worker.root(subject, 0)
+    self.result = worker.root(string, 0)
     self.captures = captures_of_worker(worker)
   }
   
