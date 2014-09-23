@@ -54,7 +54,7 @@ BytecodeInstructions < EmptyObject {
       m.pos_predicate(Proc.new { inner.bytecode(m) })
     }
     OneOrMore << { bytecode: |m|
-      m.many(Proc.new { inner.bytecode(m) })
+      m.many(Proc.new { inner.bytecode(m); inlaid.?call })
     }
     ZeroOrOne << {
       bytecode: |m| {
@@ -65,7 +65,7 @@ BytecodeInstructions < EmptyObject {
       }
     }
     ZeroOrMore << { bytecode: |m|
-      m.kleene(Proc.new { inner.bytecode(m) })
+      m.kleene(Proc.new { inner.bytecode(m); inlaid.?call })
     }
     OrderedChoice << {
       bytecode: |m| {
@@ -82,6 +82,31 @@ BytecodeInstructions < EmptyObject {
     # TODO: Implement these
     NamedCapture << { bytecode: |m| inner.bytecode(m) }
     Reduction    << { bytecode: |m| inner.bytecode(m) }
+    
+    NamedCapture << {
+      bytecode: |m| {
+        (inner.is_a?(OneOrMore) || inner.is_a?(ZeroOrMore))
+        && (
+          inner.inlaid = Proc.new { m.capture([:m_split, captor]) }
+          m.capture([:m_start, captor])
+          inner.bytecode(m)
+          m.capture([:m_end, captor])
+        ) || (
+          m.capture([:c_start, captor])
+          inner.bytecode(m)
+          m.capture([:c_end, captor])
+        )
+      }
+    }
+    
+    Reduction << {
+      bytecode: |m| {
+        m.capture([:r_start, captor])
+        inner.bytecode(m)
+        m.capture([:r_end, captor])
+      }
+    }
+    
   }
   
   
@@ -155,21 +180,28 @@ BytecodeInstructions < EmptyObject {
   # An ordered choice between |first| and |second|.
   # Each argument should be a Proc that generates bytecode when called.
   choice: |first, second| {
-    g.push_idx # store index, so that we can restart
     local_done = g.new_label
     local_fail = g.new_label
     old_fail = g.overall_fail
     g.overall_fail = local_fail
     
+    # Store index and captures for backtracking in case of failure
+    g.push_captures_dup
+    g.push_idx
+    
     first.call
     
-    g.pop # success, pop index
+    # Success, throw away backtrack entry
+    g.pop # keep idx
+    g.pop # keep captures
     g.overall_fail = old_fail # reset fail
     g.goto(local_done)
     
+    # Failure, backtrack index and captures
     local_fail.set!
+    g.set_idx_and_pop
+    g.set_captures_and_pop
     g.overall_fail = old_fail
-    g.set_idx_and_pop # reset index to the stored index
     
     second.call
     
@@ -211,7 +243,7 @@ BytecodeInstructions < EmptyObject {
     local_retry.set!
     inner.call
     
-    # success, try again
+    # Success, try again
     g.goto(local_retry)
     
     local_fail.set!
@@ -221,23 +253,27 @@ BytecodeInstructions < EmptyObject {
   # Positive matching predicate that consumes no input.
   # The argument should be a Proc that generates bytecode when called.
   pos_predicate: |inner| {
-    g.push_idx # store index, so that we can restart
-    old_fail = g.overall_fail
     local_done = g.new_label
+    local_fail = g.new_label
+    old_fail = g.overall_fail
+    g.overall_fail = local_fail
     
-    predicate_fail = g.new_label
-    g.overall_fail = predicate_fail
+    # Store index and captures for backtracking
+    g.push_captures_dup
+    g.push_idx
     
     inner.call
     
-    # success
-    g.set_idx_and_pop # reset index to the stored index
+    # Success, but do not consume input, so backtrack index but keep captures
+    g.set_idx_and_pop
+    g.pop # keep captures
     g.overall_fail = old_fail # reset fail
     g.goto(local_done)
     
-    # failure
-    predicate_fail.set!
-    g.set_idx_and_pop # reset index to the stored index
+    # Failure, backtrack index and captures
+    local_fail.set!
+    g.set_idx_and_pop
+    g.set_captures_and_pop
     g.overall_fail = old_fail
     g.goto(g.overall_fail)
     
@@ -247,21 +283,26 @@ BytecodeInstructions < EmptyObject {
   # Negative matching predicate that consumes no input.
   # The argument should be a Proc that generates bytecode when called.
   neg_predicate: |inner| {
-    g.push_idx # store index, so that we can restart
-    old_fail = g.overall_fail
-
     local_fail = g.new_label
+    old_fail = g.overall_fail
     g.overall_fail = local_fail
+    
+    # Store index and captures for backtracking
+    g.push_captures_dup
+    g.push_idx
     
     inner.call
     
-    # success => failure
-    g.set_idx_and_pop # reset index to the stored index
+    # Success => Failure, backtrack index and captures
+    g.set_idx_and_pop
+    g.set_captures_and_pop
     g.overall_fail = old_fail # reset fail
     g.goto(g.overall_fail)
-    # failure => success
+    
+    # Failure => Success, backtrack index but keep captures
     local_fail.set!
-    g.set_idx_and_pop # reset index to the stored index
+    g.set_idx_and_pop
+    g.pop # keep captures
     g.overall_fail = old_fail
   }
   
@@ -281,5 +322,14 @@ BytecodeInstructions < EmptyObject {
     
     local_done.set!
     g.set_idx_and_pop # set to the new index given by the call's return value
+  }
+  
+  capture: |metadata| {
+    g.push_captures
+      g.push_idx
+      g.push_literal(metadata)
+      g.make_array(2)
+    g.send(:push, 1)
+    g.pop
   }
 }

@@ -14,7 +14,9 @@ BytecodeHelpers < BasicObject {
   set_captures:  g.set_ivar   (:"@captures")
   push_captures: g.push_ivar  (:"@captures")
   
-  set_idx_and_pop: g.set_idx; g.pop
+  set_idx_and_pop:      g.set_idx;      g.pop
+  set_captures_and_pop: g.set_captures; g.pop
+  push_captures_dup:    g.push_captures; g.send(:dup, 0)
   
   push_subject_at_idx: g.push_subject; g.push_idx; g.send(:"[]", 1)
   

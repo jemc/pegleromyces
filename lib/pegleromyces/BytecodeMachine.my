@@ -30,9 +30,12 @@ BytecodeMachine < BasicObject, BytecodeInstructions {
   # Execute the root rule instruction sequence over the given subject
   execute: {
     worker = compile_worker
-    # puts(worker.method(:unintended).executable.decode) # Print for debug
+    # puts(worker.method(:root).executable.decode) # Print for debug
+    worker.instance_variable_set(:"@captures", [])
     self.result = worker.root(subject, 0)
+    self.captures = worker.instance_variable_get(:"@captures")
   }
   
   var result
+  var captures
 }
