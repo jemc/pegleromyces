@@ -1,39 +1,48 @@
 
-BytecodeMachine < BasicObject, BytecodeInstructions {
+BytecodeMachine < BasicObject {
   var subject: ""
   var grammar: Grammar { }
   
-  var g # TODO: remove and localize so that rules can be compiled in parallel
+  new_worker: set_up_worker(prototype.new)
   
-  compile_worker: {
-    worker = EmptyObject { }
+  var prototype: compile_prototype
+  
+  refresh: self.prototype = compile_prototype
+  
+  compile_prototype: {
+    proto = Component.new
     grammar.construct_all_rules
     grammar.rule_table.each |name, rule| {
-      compile_rule_into(worker, name, rule)
+      compile_rule_into(proto, name, rule)
     }
-    worker
+    proto
   }
   
-  compile_rule_into: |worker, name, rule| {
+  compile_rule_into: |proto, name, rule| {
     construct = rule.construct_rule
     
-    worker.component.dynamic_method(name, "(compiled parser)") |g| {
-      self.g = g
+    proto.dynamic_method(name, "(compiled parser)") |g| {
+      instructor = BytecodeInstructions { }
+      instructor.g = g
       g.extend(BytecodeHelpers)
       
       g.rule_start
-      construct.bytecode(self)
+      construct.bytecode(instructor)
       g.rule_finish
     }
   }
   
+  set_up_worker: |worker|
+    worker.instance_variable_set(:"@captures", []); worker
+  
+  captures_of_worker: |worker|
+    worker.instance_variable_get(:"@captures")
+  
   # Execute the root rule instruction sequence over the given subject
   execute: {
-    worker = compile_worker
-    # puts(worker.method(:root).executable.decode) # Print for debug
-    worker.instance_variable_set(:"@captures", [])
+    worker = new_worker
     self.result = worker.root(subject, 0)
-    self.captures = worker.instance_variable_get(:"@captures")
+    self.captures = captures_of_worker(worker)
   }
   
   var result

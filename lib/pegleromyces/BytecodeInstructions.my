@@ -36,7 +36,7 @@ import "BytecodeHelpers.my"
 # This set of instructions is not directly related to those in Instructions, as
 # those are not necessarily suitable for direct translation to the Rubinius VM.
 #
-BytecodeInstructions < EmptyObject {
+BytecodeInstructions < BasicObject {
   
   Constructions << {
     AnyCharacter    << { bytecode: |m| m.any(1) }
@@ -109,6 +109,8 @@ BytecodeInstructions < EmptyObject {
     
   }
   
+  
+  var g # The generator to use
   
   # Match any character, |count| number of times.
   any: |count| {
