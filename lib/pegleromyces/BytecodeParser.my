@@ -1,5 +1,5 @@
 
-BytecodeMachine < BasicObject {
+BytecodeParser < BasicObject {
   var subject: ""
   var grammar: Grammar { }
   

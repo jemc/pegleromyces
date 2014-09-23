@@ -10,11 +10,11 @@ import 'Constructions.test.my'
 import 'Instructions.test.my'
 import 'Machine.test.my'
 
-import 'BytecodeInstructions.test.my'
-import 'BytecodeMachine.test.my'
-
 import 'Processor.test.my'
 import 'Builder.test.my'
 
 import 'Grammar.test.my'
 import 'Parser.test.my'
+
+import 'BytecodeInstructions.test.my'
+import 'BytecodeParser.test.my'

@@ -2,38 +2,38 @@
 import 'fixtures/MycoGrammar.my'
 
 BasicSpec {
-  name: "BytecodeMachine"
+  name: "BytecodeParser"
   
-  new_machine: BytecodeMachine { }
+  new_parser: BytecodeParser { }
   
   [tests]
   
   it "can match from a tiny grammar": {
-    machine = new_machine
-    machine.grammar = Grammar {
+    parser = new_parser
+    parser.grammar = Grammar {
       [rules]
       rule root:
         str('abc') / str('x') + set('Yy') + !str('y') + !!range('a','z') + any
     }
-    machine.subject = 'xyz'
-    machine.execute
-    assert_equal(machine.result, 3)
+    parser.subject = 'xyz'
+    parser.execute
+    assert_equal(parser.result, 3)
   }
   
   it "can match from a grammar with multiplicit patterns": {
-    machine = new_machine
-    machine.grammar = Grammar {
+    parser = new_parser
+    parser.grammar = Grammar {
       [rules]
       rule root: str('x').+ + str('y').* + str('z').-
     }
-    machine.subject = 'xxz'
-    machine.execute
-    assert_equal(machine.result, 3)
+    parser.subject = 'xxz'
+    parser.execute
+    assert_equal(parser.result, 3)
   }
   
   it "can match from a grammar with rule calls": {
-    machine = new_machine
-    machine.grammar = Grammar {
+    parser = new_parser
+    parser.grammar = Grammar {
       [rules]
       rule root: unintended / intended
       rule unintended: abc
@@ -46,15 +46,15 @@ BasicSpec {
       rule lower: range('a','z')
       rule any_lower: !!lower + any
     }
-    machine.subject = 'xyz'
-    machine.execute
-    assert_equal(machine.result, 3)
+    parser.subject = 'xyz'
+    parser.execute
+    assert_equal(parser.result, 3)
   }
   
   it "can match from the Myco grammar": {
-    machine = new_machine
-    machine.grammar = MycoGrammar
-    machine.subject = '
+    parser = new_parser
+    parser.grammar = MycoGrammar
+    parser.subject = '
     Object {
       foo:    one
       bar  :  Two  
@@ -77,7 +77,7 @@ BasicSpec {
       f:    false
       "x y" : z
     }'
-    machine.execute
-    assert(machine.result)
+    parser.execute
+    assert(parser.result)
   }
 }

@@ -5,11 +5,11 @@ import 'pegleromyces/Constructions.my'
 import 'pegleromyces/Instructions.my'
 import 'pegleromyces/Machine.my'
 
-import 'pegleromyces/BytecodeInstructions.my'
-import 'pegleromyces/BytecodeMachine.my'
-
 import 'pegleromyces/Processor.my'
 import 'pegleromyces/Builder.my'
 
 import 'pegleromyces/Grammar.my'
 import 'pegleromyces/Parser.my'
+
+import 'pegleromyces/BytecodeInstructions.my'
+import 'pegleromyces/BytecodeParser.my'
