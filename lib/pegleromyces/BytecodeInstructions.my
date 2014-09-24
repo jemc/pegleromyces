@@ -79,10 +79,6 @@ BytecodeInstructions < BasicObject {
       first.bytecode(m); second.bytecode(m)
     }
     
-    # TODO: Implement these
-    NamedCapture << { bytecode: |m| inner.bytecode(m) }
-    Reduction    << { bytecode: |m| inner.bytecode(m) }
-    
     NamedCapture << {
       bytecode: |m| {
         (inner.is_a?(OneOrMore) || inner.is_a?(ZeroOrMore))
@@ -222,13 +218,21 @@ BytecodeInstructions < BasicObject {
     g.push_false
     
     local_retry.set!
+    
+    # Store captures for restoration
+    g.push_temp_captures
+    
     inner.call
     
-    # success, pop and push a true to indicate at least one match and try again
+    # Success, accept captures and try again, popping the last boolean
+    # to push a true to indicate at least one match was made.
+    g.pop_to_accept_captures
     g.pop; g.push_true
     g.goto(local_retry)
     
+    # Failure, reject captures and continue
     local_fail.set!
+    g.pop_to_reject_captures
     g.overall_fail = old_fail # reset fail
     
     # If at least one match was not found, it is an overall failure
@@ -244,12 +248,19 @@ BytecodeInstructions < BasicObject {
     g.overall_fail = local_fail
     
     local_retry.set!
+    
+    # Store captures for restoration
+    g.push_temp_captures
+    
     inner.call
     
-    # Success, try again
+    # Success, accept captures and try again
+    g.pop_to_accept_captures
     g.goto(local_retry)
     
+    # Failure, reject captures and continue
     local_fail.set!
+    g.pop_to_reject_captures
     g.overall_fail = old_fail # reset fail
   }
   
@@ -313,6 +324,8 @@ BytecodeInstructions < BasicObject {
   call: |name| {
     local_done = g.new_label
     
+    g.push_temp_captures
+    
     g.push_self
       g.push_subject
       g.push_idx
@@ -320,11 +333,15 @@ BytecodeInstructions < BasicObject {
     g.dup_top # duplicate the result so one will be left after the if_true check
     g.goto_if_true(local_done)
     
-    g.pop # pop the duplicated result - it's not needed in failure
+    # Failure, reject index and captures
+    g.pop # reject idx (which is actually null here)
+    g.pop_to_reject_captures
     g.goto(g.overall_fail)
     
+    # Success, accept new index and captures
     local_done.set!
     g.pop_to_set_idx # set to the new index given by the call's return value
+    g.pop_to_accept_captures
   }
   
   capture: |metadata| {
