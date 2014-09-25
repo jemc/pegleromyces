@@ -37,13 +37,26 @@ BytecodeParser < BasicObject {
   captures_of_worker: |worker|
     worker.instance_variable_get(:"@captures")
   
-  # Parse the given string using the current grammar
+  new_processor: Processor.new(builder: new_builder)
+  new_builder: Builder.new
+  
+  # Match and process the given string using the current grammar
   parse: |string| {
     worker = new_worker
-    self.result = worker.root(string, 0)
-    self.captures = captures_of_worker(worker)
+    
+    self.end_idx = worker.root(string, 0)
+    
+    capture_tokens = captures_of_worker(worker)
+    
+    self.result = end_idx
+    if(end_idx) {
+      processor = new_processor
+      processor.string = string
+      processor.capture_tokens = capture_tokens
+      self.result = processor.process
+    }
   }
   
+  var end_idx
   var result
-  var captures
 }

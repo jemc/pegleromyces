@@ -16,7 +16,7 @@ BasicSpec {
         str('abc') / str('x') + set('Yy') + !str('y') + !!range('a','z') + any
     }
     parser.parse('xyz')
-    assert_equal(parser.result, 3)
+    assert_equal(parser.end_idx, 3)
   }
   
   it "can match from a grammar with multiplicit patterns": {
@@ -26,7 +26,7 @@ BasicSpec {
       rule root: str('x').+ + str('y').* + str('z').-
     }
     parser.parse('xxz')
-    assert_equal(parser.result, 3)
+    assert_equal(parser.end_idx, 3)
   }
   
   it "can match from a grammar with rule calls": {
@@ -45,36 +45,39 @@ BasicSpec {
       rule any_lower: !!lower + any
     }
     parser.parse('xyz')
-    assert_equal(parser.result, 3)
+    assert_equal(parser.end_idx, 3)
   }
   
   it "can match from the Myco grammar": {
     parser = new_parser
+    
+    # TODO: remove this hack for getting the processor methods
+    builder = BasicObject {
+      var ast: BasicObject {
+        var delegate: Myco::ToolSet::Parser.new("",null,null)
+        method_missing: |meth, loc, *args| {
+          delegate.send(:"process_"meth"", loc.line, *args)
+        }
+      }
+    }
+    parser.component.declare_meme(:new_builder) { builder }
+    
     parser.grammar = MycoGrammar
-    string = '
-    Object {
-      foo:    one
-      bar  :  Two  
-      baz    :3
-      deci  : 3.88
-      ary :  [1,2, 3,
-              4
-              5,,
-              6
-              
-              7,
-             ]
-      all:null
-      none:void
-      str  : "string"
-      sym  :  :bol
-      ssym : :"with spaces"
-      s  :  self
-      t:    true
-      f:    false
-      "x y" : z
-    }'
-    parser.parse(string)
-    assert(parser.result)
+    
+    examples = [
+      'Object {
+        foo: one
+      }'
+      [:declobj, [:array, [:const, :"Object"]], [:block, 
+        [:meme, :foo, [:array], [:args, :"*"], [:block, [:lambig, :one]]],
+      ]]
+    ]
+    
+    examples.each_slice(2) |input, output| {
+      parser.parse(input)
+      result = parser.result.fetch(:root)
+      result = result.body.to_sexp.last
+      assert_equal(result, output)
+    }
   }
 }
