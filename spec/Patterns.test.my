@@ -136,7 +136,7 @@ BasicSpec {
     a = shorthand.range('x','z')
     assert_is_a(a, Patterns::CharacterRange)
     assert_equal(a.start, 120)
-    assert_equal(a.end,   122)
+    assert_equal(a.stop,  122)
   }
   
   it "creates a Reduction with the 'r' shorthand method": {

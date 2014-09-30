@@ -12,7 +12,7 @@ Patterns < EmptyObject {
   Character         < Base { var code }
   CharacterString   < Base { var codes } # Concatenation for Characters
   CharacterSet      < Base { var codes } # OrderedChoice for Characters
-  CharacterRange    < Base { var start, var end }
+  CharacterRange    < Base { var start, var stop }
   
   NegativePredicate < UnaryBase { }
   PositivePredicate < UnaryBase { }
@@ -33,7 +33,7 @@ Patterns < EmptyObject {
     char:  |character|        Character.new(code:character.ord)
     str:   |string|     CharacterString.new(codes:string.each_char.map(&:ord))
     set:   |string|        CharacterSet.new(codes:string.each_char.map(&:ord))
-    range: |start, end|  CharacterRange.new(start:start.ord, end:end.ord)
+    range: |start, stop| CharacterRange.new(start:start.ord, stop:stop.ord)
     r:     |pattern, &block|  Reduction.new(inner:pattern, block:block)
   }
   

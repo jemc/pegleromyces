@@ -12,7 +12,7 @@ Constructions < EmptyObject {
   Character         < Base { var code }
   CharacterString   < Base { var codes }
   CharacterSet      < Base { var codes }
-  CharacterRange    < Base { var start, var end }
+  CharacterRange    < Base { var start, var stop }
   
   NegativePredicate < UnaryBase { }
   PositivePredicate < UnaryBase { }
@@ -41,7 +41,7 @@ Constructions < EmptyObject {
   Patterns::CharacterString   << { construct: CharacterString.new(codes:codes) }
   Patterns::CharacterSet      << { construct: CharacterSet   .new(codes:codes) }
   Patterns::CharacterRange    << { construct: CharacterRange .new(start:start
-                                                                    end:end) }
+                                                                   stop:stop) }
   
   Patterns::NegativePredicate << { construct_type: NegativePredicate }
   Patterns::PositivePredicate << { construct_type: PositivePredicate }
@@ -66,7 +66,7 @@ Constructions < EmptyObject {
   CharacterString << { sequence: codes.map |code| { [:char, code] } }
   CharacterSet    << { sequence: [[:charset, table]]
                           table: codes.map |code| { [code, true] }.to_h }
-  CharacterRange  << { sequence: [[:charrange, start, end]] }
+  CharacterRange  << { sequence: [[:charrange, start, stop]] }
   
   NegativePredicate << {
     sequence: {

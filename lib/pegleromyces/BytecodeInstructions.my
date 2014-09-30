@@ -44,7 +44,7 @@ BytecodeInstructions < BasicObject {
     CharacterString << { bytecode: |m| m.char(codes.map(&:chr).join) }
     CharacterSet    << { bytecode: |m| m.set(codes.map(&:chr).join) }
     CharacterRange  << { bytecode: |m|
-      codes = Range.new(start,end); m.set(codes.map(&:chr).join)
+      codes = Range.new(start,stop); m.set(codes.map(&:chr).join)
     }
     
     NegativePredicate << { bytecode: |m|

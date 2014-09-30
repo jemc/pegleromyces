@@ -36,7 +36,7 @@ BasicSpec {
   }
   
   specify "CharacterRange creates a single charrange instruction": {
-    construct = Constructions::CharacterRange.new(start:120, end:122)
+    construct = Constructions::CharacterRange.new(start:120, stop:122)
     assert_equal(construct.sequence, [
       [:charrange, 120, 122]
     ])
