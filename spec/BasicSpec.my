@@ -12,6 +12,10 @@ RSpecLoadOnce: Object {
       RSpec.configuration.define_singleton_method(:files_to_run) { [] }
       
       RSpec.configure |c| {
+        # If any tests are marked with iso:true, only run those tests
+        c.filter_run_including(iso:true)
+        c.run_all_when_everything_filtered = true
+        
         # Abort after first failure
         c.fail_fast = true
         
@@ -59,7 +63,7 @@ BasicSpec < Object {
     
     group.?name && RSpec.describe(group.name) {
       group.tests.memes.each |name, test| {
-        it(name) {
+        it(name, iso:test.metadata[:iso]) {
           group.rspec = self
           
           test.result
@@ -72,4 +76,10 @@ BasicSpec < Object {
   
   it: Decorator { }
   specify: Decorator { }
+  
+  iso: Decorator {
+    apply: |meme| {
+      meme.metadata[:iso] = true
+    }
+  }
 }
