@@ -26,7 +26,9 @@ Pegleromyces is...
 
 4. Capable of allowing user-mutation of the grammar in between parse runs.
 
-5. Implemented as efficiently as possible given the above constraints.
+5. Capable of parsing composed grammars for other languages (including user-created languages).
+
+6. Implemented as efficiently as possible given the above constraints.
 
 
 ## The Name
