@@ -1,5 +1,5 @@
 
-import 'fixtures/MycoGrammar.my'
+# import 'fixtures/MycoGrammar.my'
 
 BasicSpec {
   name: "BytecodeParser"
@@ -48,7 +48,7 @@ BasicSpec {
     assert_equal(parser.end_idx, 3)
   }
   
-  it "can match from the Myco grammar": {
+  skip it "can match from the Myco grammar": {
     parser = new_parser
     
     # TODO: remove this hack for getting the processor methods
