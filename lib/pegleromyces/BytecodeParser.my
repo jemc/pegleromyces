@@ -31,6 +31,52 @@ BytecodeParser < BasicObject {
     }
   }
   
+  compile_generator: |name, file, line=1, &block| {
+    g = Myco::ToolSet::Generator.new
+    g.name = name
+    g.file = file
+    g.set_line(line)
+    
+    block.call(g)
+    
+    g.ret
+    g.close
+    g.use_detected
+    g
+  }
+  
+  compile_code: |name, file, line=1, &block| {
+    g = compile_generator(name, file, line, &block)
+    g.encode
+    g.package(Rubinius::CompiledCode)
+  }
+  
+  save_prototype: |filename| {
+    code = compile_code(:__script__, :"(snippet)") |g| {
+      g.push_const(:"Class")
+      g.create_block(compile_generator(:__block__, :"(snippet)") |g| {
+        prototype.instance_methods.each |name| {
+          g.push_rubinius
+          g.push_literal(name)
+          g.push_literal(prototype.instance_method(name).executable)
+          g.push_scope
+          g.push_variables
+          g.send(:method_visibility, 0)
+          g.send(:add_defn_method, 4)
+        }
+      })
+      g.send_with_block(:new, 0)
+    }
+    
+    Myco::ToolSet::CompiledFile.dump(code, filename, Rubinius::Signature, Rubinius::RUBY_LIB_VERSION)
+  }
+  
+  load_prototype: |filename| {
+    loader = Myco::CodeLoader::BytecodeLoader.new(filename)
+    loader.bind_to(call_depth:1)
+    self.prototype = loader.load
+  }
+  
   set_up_worker: |worker|
     worker.instance_variable_set(:"@captures", []); worker
   
@@ -39,6 +85,7 @@ BytecodeParser < BasicObject {
   
   new_processor: Processor.new(builder: new_builder)
   new_builder: Builder.new
+  
   
   # Match and process the given string using the current grammar
   parse: |string| {

@@ -48,6 +48,23 @@ BasicSpec {
     assert_equal(parser.end_idx, 3)
   }
   
+  it "can save a parser to a file to load and run it later": {
+    parser = new_parser
+    parser.grammar = Grammar {
+      [rules]
+      rule root: (r(character.+[:clist]) { clist })[:root]
+      rule character: r(any[:text]) { text.to_sym }
+    }
+    parser.parse('xyz')
+    assert_equal(parser.result.fetch(:root), [:x, :y, :z])
+    parser.save_prototype("/tmp/pegleromyces_output.my.rbc")
+    
+    parser = new_parser
+    parser.load_prototype("/tmp/pegleromyces_output.my.rbc")
+    parser.parse('xyz')
+    assert_equal(parser.result.fetch(:root), [:x, :y, :z])
+  }
+  
   skip it "can match from the Myco grammar": {
     parser = new_parser
     
