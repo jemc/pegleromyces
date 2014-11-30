@@ -65,7 +65,7 @@ BasicSpec < Object {
       group.tests.memes.each |name, test| {
         it(name, iso:test.metadata[:iso]) {
           group.rspec = self
-          
+          test.metadata[:skip] && group.rspec.skip
           test.result
         }
       }
@@ -80,6 +80,12 @@ BasicSpec < Object {
   iso: Decorator {
     apply: |meme| {
       meme.metadata[:iso] = true
+    }
+  }
+  
+  skip: Decorator {
+    apply: |meme| {
+      meme.metadata[:skip] = true
     }
   }
 }
