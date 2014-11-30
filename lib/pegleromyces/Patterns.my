@@ -103,10 +103,6 @@ Patterns < EmptyObject {
       "!": null
     }
     
-    new_environment: {
-      env = Patterns::Reduction::Environment { }
-      env.component.declare_meme(:"!", &block)
-      env
-    }
+    code: block.block.compiled_code
   }
 }

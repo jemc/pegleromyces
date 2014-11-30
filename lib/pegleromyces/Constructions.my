@@ -52,10 +52,10 @@ Constructions < EmptyObject {
   Patterns::Concatenation     << { construct_type: Concatenation }
   
   Patterns::NamedCapture      << {
-    construct: NamedCapture.new(inner:inner.construct, captor:self)
+    construct: NamedCapture.new(inner:inner.construct, captor:self.name)
   }
   Patterns::Reduction         << {
-    construct: Reduction.new(inner:inner.construct, captor:self)
+    construct: Reduction.new(inner:inner.construct, captor:self.code)
   }
   
   ##

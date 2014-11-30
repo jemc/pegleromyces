@@ -32,12 +32,12 @@ Processor < BasicObject {
     send(type, idx, captor)
   }
   
-  c_start: |idx, captor| {
+  c_start: |idx, name| {
     # Note the starting index of the text capture
     cidx_stack.push(idx)
   }
   
-  c_end: |idx, captor| {
+  c_end: |idx, name| {
     captures = capt_stack.last
     start_idx = cidx_stack.pop
     
@@ -63,20 +63,20 @@ Processor < BasicObject {
     
     store_value = [[start_idx, idx], value]
     captures.store(idx, store_value)
-    captures.store(captor.name, store_value)
+    captures.store(name, store_value)
   }
   
-  m_start: |idx, captor| {
+  m_start: |idx, name| {
     midx_stack.push(idx)
-    c_start(idx, captor)
+    c_start(idx, name)
   }
   
-  m_split: |idx, captor| {
-    c_end(idx, captor)
-    c_start(idx, captor)
+  m_split: |idx, name| {
+    c_end(idx, name)
+    c_start(idx, name)
   }
   
-  m_end: |idx, captor| {
+  m_end: |idx, name| {
     captures = capt_stack.last
     start_idx = midx_stack.pop
     cidx_stack.pop # Discard cidx pushed by m_start/end calling c_start
@@ -100,16 +100,16 @@ Processor < BasicObject {
     
     store_value = [[start_idx, idx], value]
     captures.store(idx, store_value)
-    captures.store(captor.name, store_value)
+    captures.store(name, store_value)
   }
   
-  r_start: |idx, captor| (
+  r_start: |idx, code| (
     # Push a new layer of reduction context onto the stack
     push_layer
     ridx_stack.push(idx)
   )
   
-  r_end: |idx, captor| {
+  r_end: |idx, code| {
     captures = pop_layer
     start_idx = ridx_stack.pop
     
@@ -118,7 +118,11 @@ Processor < BasicObject {
       .map    |k,v| { [k,v.last] }
       .to_h
     
-    env = captor.new_environment
+    # TODO: clean up and optimize this
+    cscope = ::Rubinius::ConstantScope.new(Patterns::Reduction::Environment)
+    code.scope = cscope
+    env = Patterns::Reduction::Environment { }
+    env.component.declare_meme(:"!", [], code)
     env.captures = env_captures
     env.builder = builder
     
