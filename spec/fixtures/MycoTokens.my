@@ -2,42 +2,6 @@
 MycoTokens: Grammar {
   C: MycoCharacterClasses
   
-  Token < Object {
-    var type
-    var text
-    var line
-    
-    inspect: [type, text, line].inspect
-    to_s:    [type, text, line].inspect
-    
-    sym:      text.to_sym
-    float:    send("Float", text)
-    integer:  send("Integer", text)
-  }
-  
-  [decorators]
-  
-  # TODO: streamline syntax for this definition to make it more intuitive
-  token: Decorator {
-    apply: |meme| {
-      orig_meme = meme.dup
-      meme.body = Proc.new {
-        Patterns::Reduction.new(
-          inner: (orig_meme.result)[:text]
-          block: Proc.new |*all| {
-            Token.new(
-              type: :"t_"meme.name""
-              text: text
-              # TODO: get row/col info from parser
-            )
-          }
-        )
-      }
-    }
-    [transforms]
-    cache: true
-  }
-  
   [main]
   
   token const_sep:     str(',')

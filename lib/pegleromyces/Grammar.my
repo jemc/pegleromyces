@@ -30,7 +30,44 @@ Grammar < BasicObject, Patterns::ShorthandMethods {
     }
   }
   
+  # TODO: Don't pollute toplevel
+  ::Token < Object {
+    var type
+    var text
+    var line
+    
+    inspect: [type, text, line].inspect
+    to_s:    [type, text, line].inspect
+    
+    sym:      text.to_sym
+    float:    send("Float", text)
+    integer:  send("Integer", text)
+  }
+  
   [decorators]
+  
+  # TODO: streamline syntax for this definition to make it more intuitive
+  token: Decorator {
+    apply: |meme| {
+      orig_meme = meme.dup
+      meme.body = Proc.new {
+        Patterns::Reduction.new(
+          inner: (orig_meme.result)[:text]
+          args: [meme.name]
+          block: Proc.new |name| {
+            ::Token.new(
+              type: :"t_"name""
+              text: text
+              # TODO: get row/col info from parser
+            )
+          }
+        )
+      }
+    }
+    [transforms]
+    cache: true
+  }
+  
   var rule: Decorator {
     apply: |meme| {
       name = meme.name
