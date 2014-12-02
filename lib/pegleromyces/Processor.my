@@ -27,9 +27,9 @@ Processor < BasicObject {
   process: setup; process_each; final_captures
   
   process_each: capture_tokens.each |idx, metadata| {
-    type   = metadata.first
-    captor = metadata.last
-    send(type, idx, captor)
+    type     = metadata.first
+    captargs = metadata.last
+    send(type, idx, *captargs)
   }
   
   c_start: |idx, name| {
@@ -103,13 +103,13 @@ Processor < BasicObject {
     captures.store(name, store_value)
   }
   
-  r_start: |idx, code| (
+  r_start: |idx, code, *args| (
     # Push a new layer of reduction context onto the stack
     push_layer
     ridx_stack.push(idx)
   )
   
-  r_end: |idx, code| {
+  r_end: |idx, code, *args| {
     captures = pop_layer
     start_idx = ridx_stack.pop
     
@@ -128,7 +128,7 @@ Processor < BasicObject {
     
     # The '!' operator on the environment invokes the action to get a value
     # Store with the string index as the key so the reduction can be captured
-    value = !env
+    value = env.__send__(:"!", *args)
     store_value = [[start_idx, idx], value]
     capt_stack.last.store(idx, store_value)
   }

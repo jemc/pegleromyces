@@ -23,7 +23,7 @@ Patterns < EmptyObject {
   Concatenation     < BinaryBase { }
   
   NamedCapture      < UnaryBase { }
-  Reduction         < UnaryBase { var block }
+  Reduction         < UnaryBase { var block, var args: [] }
   
   ##
   # Shorthand methods for creating primitive patterns

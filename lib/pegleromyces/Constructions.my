@@ -22,8 +22,8 @@ Constructions < EmptyObject {
   OrderedChoice     < BinaryBase { }
   Concatenation     < BinaryBase { }
   
-  NamedCapture      < UnaryBase { var captor }
-  Reduction         < UnaryBase { var captor }
+  NamedCapture      < UnaryBase { var captargs }
+  Reduction         < UnaryBase { var captargs }
   
   ##
   # Bindings of patterns to constructions.
@@ -52,10 +52,16 @@ Constructions < EmptyObject {
   Patterns::Concatenation     << { construct_type: Concatenation }
   
   Patterns::NamedCapture      << {
-    construct: NamedCapture.new(inner:inner.construct, captor:self.name)
+    construct: NamedCapture.new(
+      inner: inner.construct
+      captargs: [self.name]
+    )
   }
   Patterns::Reduction         << {
-    construct: Reduction.new(inner:inner.construct, captor:self.code)
+    construct: Reduction.new(
+      inner: inner.construct
+      captargs: [self.code, *self.args]
+    )
   }
   
   ##
@@ -130,12 +136,12 @@ Constructions < EmptyObject {
     sequence: {
       (inner.is_a?(OneOrMore) || inner.is_a?(ZeroOrMore))
       && (
-        inner.inlaid = [[:capture, [:m_split, captor]]]
+        inner.inlaid = [[:capture, [:m_split, captargs]]]
         a = inner.sequence
-        [[:capture, [:m_start, captor]], *a, [:capture, [:m_end, captor]]]
+        [[:capture, [:m_start, captargs]], *a, [:capture, [:m_end, captargs]]]
       ) || (
         a = inner.sequence
-        [[:capture, [:c_start, captor]], *a, [:capture, [:c_end, captor]]]
+        [[:capture, [:c_start, captargs]], *a, [:capture, [:c_end, captargs]]]
       )
     }
   }
@@ -143,7 +149,7 @@ Constructions < EmptyObject {
   Reduction << {
     sequence: {
       a = inner.sequence
-      [[:capture, [:r_start, captor]], *a, [:capture, [:r_end, captor]]]
+      [[:capture, [:r_start, captargs]], *a, [:capture, [:r_end, captargs]]]
     }
   }
   

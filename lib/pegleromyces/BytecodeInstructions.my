@@ -83,23 +83,23 @@ BytecodeInstructions < BasicObject {
       bytecode: |m| {
         (inner.is_a?(OneOrMore) || inner.is_a?(ZeroOrMore))
         && (
-          inner.inlaid = Proc.new { m.capture(:m_split, captor) }
-          m.capture(:m_start, captor)
+          inner.inlaid = Proc.new { m.capture(:m_split, captargs) }
+          m.capture(:m_start, captargs)
           inner.bytecode(m)
-          m.capture(:m_end, captor)
+          m.capture(:m_end, captargs)
         ) || (
-          m.capture(:c_start, captor)
+          m.capture(:c_start, captargs)
           inner.bytecode(m)
-          m.capture(:c_end, captor)
+          m.capture(:c_end, captargs)
         )
       }
     }
     
     Reduction << {
       bytecode: |m| {
-        m.capture(:r_start, captor)
+        m.capture(:r_start, captargs)
         inner.bytecode(m)
-        m.capture(:r_end, captor)
+        m.capture(:r_end, captargs)
       }
     }
     
@@ -347,8 +347,7 @@ BytecodeInstructions < BasicObject {
   capture: |*metadata| {
     g.push_captures
       g.push_idx
-      metadata.each |primitive| { g.push_literal(primitive) }
-      g.make_array(metadata.size)
+      g.push_literal_or_array(metadata)
       g.make_array(2)
     g.send(:push, 1)
     g.pop

@@ -171,11 +171,11 @@ BasicSpec {
     a = Constructions::CharacterString.new(codes:[120,121,122])
     construct = Constructions::NamedCapture.new(inner:a)
     assert_equal(construct.sequence, [
-      [:capture, [:c_start, construct.captor]]
+      [:capture, [:c_start, construct.captargs]]
       [:char, 120]
       [:char, 121]
       [:char, 122]
-      [:capture, [:c_end, construct.captor]]
+      [:capture, [:c_end, construct.captargs]]
     ])
   }
   
@@ -219,11 +219,11 @@ BasicSpec {
     a = Constructions::CharacterString.new(codes:[120,121,122])
     construct = Constructions::Reduction.new(inner:a)
     assert_equal(construct.sequence, [
-      [:capture, [:r_start, construct.captor]]
+      [:capture, [:r_start, construct.captargs]]
       [:char, 120]
       [:char, 121]
       [:char, 122]
-      [:capture, [:r_end, construct.captor]]
+      [:capture, [:r_end, construct.captargs]]
     ])
   }
 }
