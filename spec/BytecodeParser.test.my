@@ -1,6 +1,4 @@
 
-# import 'fixtures/MycoGrammar.my'
-
 BasicSpec {
   name: "BytecodeParser"
   
@@ -65,7 +63,7 @@ BasicSpec {
     assert_equal(parser.result.fetch(:root), [:x, :y, :z])
   }
   
-  skip it "can match from the Myco grammar": {
+  it "can match from the Myco grammar": {
     parser = new_parser
     
     # TODO: remove this hack for getting the processor methods
@@ -79,7 +77,15 @@ BasicSpec {
     }
     parser.component.declare_meme(:new_builder) { builder }
     
-    parser.grammar = MycoGrammar
+    # TODO: Move this to somewhere encapsulated and reasonable
+    proto_file = "/tmp/pegleromyces_myco_prototype.my.rbc"
+    grammar_file = ""Myco.cscope.myco_file.instance.dirname"/fixtures/MycoGrammar.my"
+    unless (::File.exists?(proto_file) &&
+            ::File.stat(proto_file).mtime >= ::File.stat(grammar_file).mtime) {
+      parser.grammar = Myco.eval_file(grammar_file, [], true, Myco.cscope)
+      parser.save_prototype(proto_file)
+    }
+    parser.load_prototype(proto_file)
     
     examples = [
       'Object {
