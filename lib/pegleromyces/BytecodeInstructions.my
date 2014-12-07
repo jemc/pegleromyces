@@ -84,11 +84,11 @@ BytecodeInstructions < BasicObject {
         (inner.is_a?(OneOrMore) || inner.is_a?(ZeroOrMore))
         && (
           inner.inlaid = Proc.new { m.capture(:m_split, captargs) }
-          m.capture(:m_start, captargs)
+          m.capture(:m_start)
           inner.bytecode(m)
           m.capture(:m_end, captargs)
         ) || (
-          m.capture(:c_start, captargs)
+          m.capture(:c_start)
           inner.bytecode(m)
           m.capture(:c_end, captargs)
         )
@@ -97,7 +97,7 @@ BytecodeInstructions < BasicObject {
     
     NamedTextCapture << {
       bytecode: |m| {
-        m.capture(:t_start, captargs)
+        m.capture(:t_start)
         inner.bytecode(m)
         m.capture(:t_end, captargs)
       }
@@ -105,7 +105,7 @@ BytecodeInstructions < BasicObject {
     
     Reduction << {
       bytecode: |m| {
-        m.capture(:r_start, captargs)
+        m.capture(:r_start)
         inner.bytecode(m)
         m.capture(:r_end, captargs)
       }

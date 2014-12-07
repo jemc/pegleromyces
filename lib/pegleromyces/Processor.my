@@ -27,12 +27,12 @@ Processor < BasicObject {
   process: setup; process_each; final_captures
   
   process_each: capture_tokens.each |idx, metadata| {
-    type     = metadata.first
-    captargs = metadata.last
+    type     = metadata[0]
+    captargs = metadata[1] || []
     send(type, idx, *captargs)
   }
   
-  c_start: |idx, name| {
+  c_start: |idx| {
     # Note the starting index of the text capture
     cidx_stack.push(idx)
   }
@@ -66,7 +66,7 @@ Processor < BasicObject {
     captures.store(name, store_value)
   }
   
-  t_start: |idx, name| {
+  t_start: |idx| {
     # Note the starting index of the text capture
     cidx_stack.push(idx)
   }
@@ -81,14 +81,14 @@ Processor < BasicObject {
     captures.store(name, store_value)
   }
   
-  m_start: |idx, name| {
+  m_start: |idx| {
     midx_stack.push(idx)
-    c_start(idx, name)
+    c_start(idx)
   }
   
   m_split: |idx, name| {
     c_end(idx, name)
-    c_start(idx, name)
+    c_start(idx)
   }
   
   m_end: |idx, name| {
@@ -118,7 +118,7 @@ Processor < BasicObject {
     captures.store(name, store_value)
   }
   
-  r_start: |idx, code, *args| (
+  r_start: |idx| (
     # Push a new layer of reduction context onto the stack
     push_layer
     ridx_stack.push(idx)

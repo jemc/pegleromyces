@@ -145,10 +145,10 @@ Constructions < EmptyObject {
       && (
         inner.inlaid = [[:capture, [:m_split, captargs]]]
         a = inner.sequence
-        [[:capture, [:m_start, captargs]], *a, [:capture, [:m_end, captargs]]]
+        [[:capture, [:m_start]], *a, [:capture, [:m_end, captargs]]]
       ) || (
         a = inner.sequence
-        [[:capture, [:c_start, captargs]], *a, [:capture, [:c_end, captargs]]]
+        [[:capture, [:c_start]], *a, [:capture, [:c_end, captargs]]]
       )
     }
   }
@@ -156,14 +156,14 @@ Constructions < EmptyObject {
   NamedTextCapture << {
     sequence: {
       a = inner.sequence
-      [[:capture, [:t_start, captargs]], *a, [:capture, [:t_end, captargs]]]
+      [[:capture, [:t_start]], *a, [:capture, [:t_end, captargs]]]
     }
   }
   
   Reduction << {
     sequence: {
       a = inner.sequence
-      [[:capture, [:r_start, captargs]], *a, [:capture, [:r_end, captargs]]]
+      [[:capture, [:r_start]], *a, [:capture, [:r_end, captargs]]]
     }
   }
   
