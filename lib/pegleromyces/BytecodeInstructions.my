@@ -95,6 +95,14 @@ BytecodeInstructions < BasicObject {
       }
     }
     
+    NamedTextCapture << {
+      bytecode: |m| {
+        m.capture(:t_start, captargs)
+        inner.bytecode(m)
+        m.capture(:t_end, captargs)
+      }
+    }
+    
     Reduction << {
       bytecode: |m| {
         m.capture(:r_start, captargs)

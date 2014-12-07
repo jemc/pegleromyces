@@ -66,6 +66,21 @@ Processor < BasicObject {
     captures.store(name, store_value)
   }
   
+  t_start: |idx, name| {
+    # Note the starting index of the text capture
+    cidx_stack.push(idx)
+  }
+  
+  t_end: |idx, name| {
+    captures = capt_stack.last
+    start_idx = cidx_stack.pop
+    
+    value = string.slice(start_idx, idx-start_idx)
+    store_value = [[start_idx, idx], value]
+    captures.store(idx, store_value)
+    captures.store(name, store_value)
+  }
+  
   m_start: |idx, name| {
     midx_stack.push(idx)
     c_start(idx, name)

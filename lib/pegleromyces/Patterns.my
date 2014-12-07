@@ -23,6 +23,7 @@ Patterns < EmptyObject {
   Concatenation     < BinaryBase { }
   
   NamedCapture      < UnaryBase { }
+  NamedTextCapture  < UnaryBase { }
   Reduction         < UnaryBase { var block, var args: [] }
   
   ##
@@ -47,16 +48,18 @@ Patterns < EmptyObject {
     "!":         NegativePredicate .new(inner:self)
     "/": |other| OrderedChoice     .new(first:self, second:other)
     "+": |other=false|
-      other && Concatenation  .new(first:self, second:other)
-            || OneOrMore      .new(inner:self)
+      other && Concatenation       .new(first:self, second:other)
+            || OneOrMore           .new(inner:self)
     "-": |other=false|
-      other && ErrorCondition .new() # TODO: add exception handling to Myco
-            || ZeroOrOne      .new(inner:self)
+      other && ErrorCondition      .new() # TODO: add exception handling to Myco
+            || ZeroOrOne           .new(inner:self)
     "*": |other=false|
-      other && ErrorCondition .new()
-            || ZeroOrMore     .new(inner:self)
+      other && ErrorCondition      .new()
+            || ZeroOrMore          .new(inner:self)
     
-    "[]": |name| NamedCapture .new(inner:self, name:name)
+    "[]": |name| NamedCapture      .new(inner:self, name:name)
+    text: |name=:text|
+                 NamedTextCapture  .new(inner:self, name:name)
   }
   
   NegativePredicate << {
