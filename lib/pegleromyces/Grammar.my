@@ -52,7 +52,7 @@ Grammar < BasicObject, Patterns::ShorthandMethods {
       orig_meme = meme.dup
       meme.body = Proc.new {
         Patterns::Reduction.new(
-          inner: (orig_meme.result)[:text]
+          inner: orig_meme.result.text
           args: [meme.name]
           block: Proc.new |name| {
             ::Token.new(
