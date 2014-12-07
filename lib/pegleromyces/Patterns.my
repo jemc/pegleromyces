@@ -24,6 +24,7 @@ Patterns < EmptyObject {
   
   NamedCapture      < UnaryBase { }
   NamedTextCapture  < UnaryBase { }
+  NamedTokenCapture < UnaryBase { }
   Reduction         < UnaryBase { var block, var args: [] }
   
   ##
@@ -60,6 +61,8 @@ Patterns < EmptyObject {
     "[]": |name| NamedCapture      .new(inner:self, name:name)
     text: |name=:text|
                  NamedTextCapture  .new(inner:self, name:name)
+    token: |name|
+                 NamedTokenCapture .new(inner:self, name:name)
   }
   
   NegativePredicate << {

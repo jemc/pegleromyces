@@ -93,13 +93,13 @@ BytecodeParser < BasicObject {
     
     self.end_idx = worker.root(string, 0)
     
-    capture_tokens = captures_of_worker(worker)
+    capture_items = captures_of_worker(worker)
     
     self.result = end_idx
     if(end_idx) {
       processor = new_processor
       processor.string = string
-      processor.capture_tokens = capture_tokens
+      processor.capture_items = capture_items
       self.result = processor.process
     }
   }

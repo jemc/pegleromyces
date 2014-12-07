@@ -24,6 +24,7 @@ Constructions < EmptyObject {
   
   NamedCapture      < UnaryBase { var captargs }
   NamedTextCapture  < UnaryBase { var captargs }
+  NamedTokenCapture < UnaryBase { var captargs }
   Reduction         < UnaryBase { var captargs }
   
   ##
@@ -60,6 +61,12 @@ Constructions < EmptyObject {
   }
   Patterns::NamedTextCapture  << {
     construct: NamedTextCapture.new(
+      inner: inner.construct
+      captargs: [self.name]
+    )
+  }
+  Patterns::NamedTokenCapture  << {
+    construct: NamedTokenCapture.new(
       inner: inner.construct
       captargs: [self.name]
     )
@@ -154,6 +161,13 @@ Constructions < EmptyObject {
   }
   
   NamedTextCapture << {
+    sequence: {
+      a = inner.sequence
+      [[:capture, [:s_start]], *a, [:capture, [:s_end, captargs]]]
+    }
+  }
+  
+  NamedTokenCapture << {
     sequence: {
       a = inner.sequence
       [[:capture, [:t_start]], *a, [:capture, [:t_end, captargs]]]

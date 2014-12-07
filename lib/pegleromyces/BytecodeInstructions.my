@@ -97,6 +97,14 @@ BytecodeInstructions < BasicObject {
     
     NamedTextCapture << {
       bytecode: |m| {
+        m.capture(:s_start)
+        inner.bytecode(m)
+        m.capture(:s_end, captargs)
+      }
+    }
+    
+    NamedTokenCapture << {
+      bytecode: |m| {
         m.capture(:t_start)
         inner.bytecode(m)
         m.capture(:t_end, captargs)

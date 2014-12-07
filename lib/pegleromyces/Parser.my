@@ -33,7 +33,7 @@ Parser < BasicObject {
     
     unless(machine.had_failure) {
       processor = new_processor
-      processor.capture_tokens = machine.captures
+      processor.capture_items = machine.captures
       self.result = processor.process
     }
     

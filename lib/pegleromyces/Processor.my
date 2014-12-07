@@ -1,7 +1,7 @@
 
 Processor < BasicObject {
   var string
-  var capture_tokens
+  var capture_items
   var builder
   
   storage starts
@@ -11,6 +11,19 @@ Processor < BasicObject {
   var midx_stack: [] # A FILO stack of start indices for multiplicit captures
   var ridx_stack: [] # A FILO stack of start indices for reductions
   var capt_stack: [] # A FILO stack of Hashes with capture names, values
+  
+  Token < Object {
+    var type
+    var text
+    var line
+    
+    inspect: [type, text, line].inspect
+    to_s:    [type, text, line].inspect
+    
+    sym:      text.to_sym
+    float:    send("Float", text)
+    integer:  send("Integer", text)
+  }
   
   pop_layer:  capt_stack.pop
   push_layer: capt_stack.push(::Hash.new)
@@ -26,17 +39,19 @@ Processor < BasicObject {
   
   process: setup; process_each; final_captures
   
-  process_each: capture_tokens.each |idx, metadata| {
+  process_each: capture_items.each |idx, metadata| {
     type     = metadata[0]
     captargs = metadata[1] || []
     send(type, idx, *captargs)
   }
   
+  # Start of a named capture
   c_start: |idx| {
     # Note the starting index of the text capture
     cidx_stack.push(idx)
   }
   
+  # End of a named capture
   c_end: |idx, name| {
     captures = capt_stack.last
     start_idx = cidx_stack.pop
@@ -66,12 +81,14 @@ Processor < BasicObject {
     captures.store(name, store_value)
   }
   
-  t_start: |idx| {
+  # Start of a named text capture
+  s_start: |idx| {
     # Note the starting index of the text capture
     cidx_stack.push(idx)
   }
   
-  t_end: |idx, name| {
+  # End of a named text capture
+  s_end: |idx, name| {
     captures = capt_stack.last
     start_idx = cidx_stack.pop
     
@@ -81,16 +98,39 @@ Processor < BasicObject {
     captures.store(name, store_value)
   }
   
+  # Start of a named token capture
+  t_start: |idx| {
+    # Note the starting index of the text capture
+    cidx_stack.push(idx)
+  }
+  
+  # End of a named token capture
+  t_end: |idx, name| {
+    captures = capt_stack.last
+    start_idx = cidx_stack.pop
+    
+    value = Token.new(
+      type: name
+      text: string.slice(start_idx, idx-start_idx)
+    )
+    store_value = [[start_idx, idx], value]
+    captures.store(idx, store_value)
+    captures.store(name, store_value)
+  }
+  
+  # Start of a multiplicit capture
   m_start: |idx| {
     midx_stack.push(idx)
     c_start(idx)
   }
   
+  # Split of a multiplicit capture
   m_split: |idx, name| {
     c_end(idx, name)
     c_start(idx)
   }
   
+  # End of a multiplicit capture
   m_end: |idx, name| {
     captures = capt_stack.last
     start_idx = midx_stack.pop
@@ -118,12 +158,14 @@ Processor < BasicObject {
     captures.store(name, store_value)
   }
   
+  # Start of a reduction
   r_start: |idx| (
     # Push a new layer of reduction context onto the stack
     push_layer
     ridx_stack.push(idx)
   )
   
+  # End of a reduction
   r_end: |idx, code, *args| {
     captures = pop_layer
     start_idx = ridx_stack.pop
