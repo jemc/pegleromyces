@@ -12,6 +12,28 @@ Processor < BasicObject {
   var ridx_stack: [] # A FILO stack of start indices for reductions
   var capt_stack: [] # A FILO stack of Hashes with capture names, values
   
+  memoize lines_of: |string| {
+    idx_ary = [0]
+    idx = 0
+    loop {
+      idx = string.index("\n", idx + 1)
+      idx || break
+      idx_ary.push(idx)
+    }
+    idx_ary
+  }
+  
+  position_of: |idx, string| {
+    nls = lines_of(string)
+    ary = nls.each_with_index.detect |x, i| {
+      nxt = nls[i + 1]
+      !nxt || nxt >= idx
+    }
+    row = ary.last + 1
+    col = idx - ary.first
+    [row, col]
+  }
+  
   Token < Object {
     var type
     var text
@@ -108,10 +130,12 @@ Processor < BasicObject {
   t_end: |idx, name| {
     captures = capt_stack.last
     start_idx = cidx_stack.pop
+    pos = position_of(start_idx, string)
     
     value = Token.new(
       type: name
-      text: string.slice(start_idx, idx-start_idx)
+      text: string.slice(start_idx, idx - start_idx)
+      line: pos.first
     )
     store_value = [[start_idx, idx], value]
     captures.store(idx, store_value)
