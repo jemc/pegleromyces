@@ -141,31 +141,21 @@ BytecodeInstructions < BasicObject {
   
   # Match the given |string| of characters, one time.
   char: |string| {
-    local_fail = g.new_label
-    local_done = g.new_label
+    g.setup_unwind(g.overall_fail, 0) # "rescue" to overall fail
     
     g.push_literal(string)
-    g.dup
-    g.send(:size, 0)
-    g.dup
-    g.move_down(2)
+      g.push_subject
+      g.push_idx
+      g.push_literal(string.size)
+    g.send(:compare_substring, 3)
+      g.meta_push_0
+      
+    g.pop_unwind # end rescued block
     
-    g.push_subject
-    g.swap
-    g.push_idx
-    g.swap
-    g.send(:substring, 2)
-    g.send(:"==", 1)
-    g.goto_if_false(local_fail)
+    g.goto_if_not_equal(g.overall_fail)
     
+    g.push_literal(string.size)
     g.increment_idx
-    g.goto(local_done)
-    
-    local_fail.set!
-    g.pop
-    g.goto(g.overall_fail)
-    
-    local_done.set!
   }
   
   # Match if the character is included in the given |string|, one time.
