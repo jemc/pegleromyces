@@ -52,19 +52,19 @@ MycoTokens: Grammar {
   token op_compare:   str('<=>') / str('=~') / str('==') /
                       str('<=') / str('>=') / str('<') / str('>')
   
-  string_norm:     !set('\\\"') + any
-  token string_body:   string_norm.* + (str('\\') + any + string_norm.*).*
+  string_norm:     !set("\\\"") + any
+  token string_body:   string_norm.* + (str("\\") + any + string_norm.*).*
   token string_begin:  str('"')
   token string_end:    str('"')
   token symstr_begin:  str(':"')
   
-  sstring_norm:    !set('\\\'') + any
-  token sstring_body:  sstring_norm.* + (str('\\') + any + sstring_norm.*).*
+  sstring_norm:    !set("\\\'") + any
+  token sstring_body:  sstring_norm.* + (str("\\") + any + sstring_norm.*).*
   token sstring_begin: str("'")
   token sstring_end:   str("'")
   
-  catgry_norm:     !set('\\[]') + any
-  token catgry_body:   catgry_norm.* + (str('\\') + any + catgry_norm.*).*
+  catgry_norm:     !set("\\[]") + any
+  token catgry_body:   catgry_norm.* + (str("\\") + any + catgry_norm.*).*
   token catgry_begin:  str('[')
   token catgry_end:    str(']')
 }
