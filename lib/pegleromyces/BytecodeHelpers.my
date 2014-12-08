@@ -30,10 +30,18 @@ BytecodeHelpers < BasicObject {
     g.push_subject; g.push_idx; g.send(:chr_at, 1)
   
   # Increment the idx local by the current number at the top of the stack
+  # Saves the new idx to @highest_idx ivar if it is highest
   increment_idx: {
     g.push_idx
     g.send(:"+", 1)
     g.set_idx
+    g.dup_top
+    g.push_ivar(:"@highest_idx")
+    g.send(:">", 1)
+    not_highest_idx_label = g.new_label
+    g.goto_if_false(not_highest_idx_label)
+    g.set_ivar(:"@highest_idx")
+    not_highest_idx_label.set!
     g.pop
   }
   

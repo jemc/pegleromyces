@@ -98,9 +98,12 @@ BasicSpec {
     
     examples.each_slice(2) |input, output| {
       parser.parse(input)
-      result = parser.result.fetch(:root)
-      result = result.body.to_sexp.last
-      assert_equal(result, output)
+      result = parser.result
+      result && (
+        result = result.fetch(:root).body.to_sexp.last
+        assert_equal(result, output)
+        true
+      ) || parser.raise_error
     }
   }
 }
