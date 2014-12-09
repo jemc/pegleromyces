@@ -48,30 +48,44 @@ BytecodeInstructions < BasicObject {
     }
     
     NegativePredicate << { bytecode: |m|
-      m.neg_predicate(Proc.new { inner.bytecode(m) })
+      m.neg_predicate(
+        Proc.new { inner.bytecode(m) }
+        inner.bytecode_can_capture
+      )
     }
     PositivePredicate << { bytecode: |m|
-      m.pos_predicate(Proc.new { inner.bytecode(m) })
+      m.pos_predicate(
+        Proc.new { inner.bytecode(m) }
+        inner.bytecode_can_capture
+      )
     }
     OneOrMore << { bytecode: |m|
-      m.many(Proc.new { inner.bytecode(m); inlaid.?call })
+      m.many(
+        Proc.new { inner.bytecode(m); inlaid.?call }
+        inner.bytecode_can_capture
+      )
     }
     ZeroOrOne << {
       bytecode: |m| {
         m.choice(
           Proc.new { inner.bytecode(m) }
           Proc.new { }
+          inner.bytecode_can_capture
         )
       }
     }
     ZeroOrMore << { bytecode: |m|
-      m.kleene(Proc.new { inner.bytecode(m); inlaid.?call })
+      m.kleene(
+        Proc.new { inner.bytecode(m); inlaid.?call }
+        inner.bytecode_can_capture
+      )
     }
     OrderedChoice << {
       bytecode: |m| {
         m.choice(
           Proc.new { first.bytecode(m) }
           Proc.new { second.bytecode(m) }
+          first.bytecode_can_capture
         )
       }
     }
@@ -119,6 +133,25 @@ BytecodeInstructions < BasicObject {
       }
     }
     
+    # Hints for optimization (skip saving of temp captures for primitives)
+    AnyCharacter      << { bytecode_can_capture: false }
+    Character         << { bytecode_can_capture: false }
+    CharacterString   << { bytecode_can_capture: false }
+    CharacterSet      << { bytecode_can_capture: false }
+    CharacterRange    << { bytecode_can_capture: false }
+    NegativePredicate << { bytecode_can_capture: inner.bytecode_can_capture }
+    PositivePredicate << { bytecode_can_capture: inner.bytecode_can_capture }
+    OneOrMore         << { bytecode_can_capture: inner.bytecode_can_capture }
+    ZeroOrOne         << { bytecode_can_capture: inner.bytecode_can_capture }
+    ZeroOrMore        << { bytecode_can_capture: inner.bytecode_can_capture }
+    OrderedChoice     << { bytecode_can_capture: first.bytecode_can_capture
+                                             || second.bytecode_can_capture }
+    Concatenation     << { bytecode_can_capture: first.bytecode_can_capture
+                                             || second.bytecode_can_capture }
+    NamedCapture      << { bytecode_can_capture: true }
+    NamedTextCapture  << { bytecode_can_capture: true }
+    NamedTokenCapture << { bytecode_can_capture: true }
+    Reduction         << { bytecode_can_capture: true }
   }
   
   
@@ -184,28 +217,28 @@ BytecodeInstructions < BasicObject {
   
   # An ordered choice between |first| and |second|.
   # Each argument should be a Proc that generates bytecode when called.
-  choice: |first, second| {
+  choice: |first, second, first_can_capture| {
     local_done = g.new_label
     local_fail = g.new_label
     old_fail = g.overall_fail
     g.overall_fail = local_fail
     
     # Store index and captures for backtracking in case of failure
-    g.push_temp_captures
+    if(first_can_capture) { g.push_temp_captures }
     g.push_idx
     
     first.call
     
     # Success, throw away backtrack entry
     g.pop # keep idx
-    g.pop_to_accept_captures
+    if(first_can_capture) { g.pop_to_accept_captures }
     g.overall_fail = old_fail # reset fail
     g.goto(local_done)
     
     # Failure, backtrack index and captures
     local_fail.set!
     g.pop_to_set_idx
-    g.pop_to_reject_captures
+    if(first_can_capture) { g.pop_to_reject_captures }
     g.overall_fail = old_fail
     
     second.call
@@ -215,7 +248,7 @@ BytecodeInstructions < BasicObject {
   
   # Keep consuming |inner| until it doesn't match; it must match at least one.
   # The argument should be a Proc that generates bytecode when called.
-  many: |inner| {
+  many: |inner, inner_can_capture| {
     local_retry = g.new_label
     local_fail = g.new_label
     old_fail = g.overall_fail
@@ -226,19 +259,19 @@ BytecodeInstructions < BasicObject {
     local_retry.set!
     
     # Store captures for restoration
-    g.push_temp_captures
+    if(inner_can_capture) { g.push_temp_captures }
     
     inner.call
     
     # Success, accept captures and try again, popping the last boolean
     # to push a true to indicate at least one match was made.
-    g.pop_to_accept_captures
+    if(inner_can_capture) { g.pop_to_accept_captures }
     g.pop; g.push_true
     g.goto(local_retry)
     
     # Failure, reject captures and continue
     local_fail.set!
-    g.pop_to_reject_captures
+    if(inner_can_capture) { g.pop_to_reject_captures }
     g.overall_fail = old_fail # reset fail
     
     # If at least one match was not found, it is an overall failure
@@ -247,7 +280,7 @@ BytecodeInstructions < BasicObject {
   
   # Keep consuming |inner| until it doesn't match; it will not cause backtrack.
   # The argument should be a Proc that generates bytecode when called.
-  kleene: |inner| {
+  kleene: |inner, inner_can_capture| {
     local_retry = g.new_label
     local_fail = g.new_label
     old_fail = g.overall_fail
@@ -256,44 +289,44 @@ BytecodeInstructions < BasicObject {
     local_retry.set!
     
     # Store captures for restoration
-    g.push_temp_captures
+    if(inner_can_capture) { g.push_temp_captures }
     
     inner.call
     
     # Success, accept captures and try again
-    g.pop_to_accept_captures
+    if(inner_can_capture) { g.pop_to_accept_captures }
     g.goto(local_retry)
     
     # Failure, reject captures and continue
     local_fail.set!
-    g.pop_to_reject_captures
+    if(inner_can_capture) { g.pop_to_reject_captures }
     g.overall_fail = old_fail # reset fail
   }
   
   # Positive matching predicate that consumes no input.
   # The argument should be a Proc that generates bytecode when called.
-  pos_predicate: |inner| {
+  pos_predicate: |inner, inner_can_capture| {
     local_done = g.new_label
     local_fail = g.new_label
     old_fail = g.overall_fail
     g.overall_fail = local_fail
     
     # Store index and captures for backtracking
-    g.push_temp_captures
+    if(inner_can_capture) { g.push_temp_captures }
     g.push_idx
     
     inner.call
     
     # Success, but do not consume input, so backtrack index but keep captures
     g.pop_to_set_idx
-    g.pop_to_accept_captures
+    if(inner_can_capture) { g.pop_to_accept_captures }
     g.overall_fail = old_fail # reset fail
     g.goto(local_done)
     
     # Failure, backtrack index and captures
     local_fail.set!
     g.pop_to_set_idx
-    g.pop_to_reject_captures
+    if(inner_can_capture) { g.pop_to_reject_captures }
     g.overall_fail = old_fail
     g.goto(g.overall_fail)
     
@@ -302,27 +335,27 @@ BytecodeInstructions < BasicObject {
   
   # Negative matching predicate that consumes no input.
   # The argument should be a Proc that generates bytecode when called.
-  neg_predicate: |inner| {
+  neg_predicate: |inner, inner_can_capture| {
     local_fail = g.new_label
     old_fail = g.overall_fail
     g.overall_fail = local_fail
     
     # Store index and captures for backtracking
-    g.push_temp_captures
+    if(inner_can_capture) { g.push_temp_captures }
     g.push_idx
     
     inner.call
     
     # Success => Failure, backtrack index and captures
     g.pop_to_set_idx
-    g.pop_to_reject_captures
+    if(inner_can_capture) { g.pop_to_reject_captures }
     g.overall_fail = old_fail # reset fail
     g.goto(g.overall_fail)
     
     # Failure => Success, backtrack index but keep captures
     local_fail.set!
     g.pop_to_set_idx
-    g.pop_to_accept_captures
+    if(inner_can_capture) { g.pop_to_accept_captures }
     g.overall_fail = old_fail
   }
   

@@ -10,6 +10,7 @@ Grammar < BasicObject, Patterns::ShorthandMethods {
     var name
     sequence: [[:call, name]]
     bytecode: |m| m.call(name)
+    bytecode_can_capture: true
   }
   
   var rule_table: Hash.new
