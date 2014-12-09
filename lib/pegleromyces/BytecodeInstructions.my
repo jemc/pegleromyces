@@ -146,7 +146,7 @@ BytecodeInstructions < BasicObject {
     g.push_literal(string)
       g.push_subject
       g.push_idx
-      g.push_literal(string.size)
+      g.push_int(string.size)
     g.send(:compare_substring, 3)
       g.meta_push_0
       
@@ -154,7 +154,7 @@ BytecodeInstructions < BasicObject {
     
     g.goto_if_not_equal(g.overall_fail)
     
-    g.push_literal(string.size)
+    g.push_int(string.size)
     g.increment_idx
   }
   
@@ -352,10 +352,11 @@ BytecodeInstructions < BasicObject {
   
   capture: |*metadata| {
     g.push_captures
-      g.push_idx
-      g.push_literal_or_array(metadata)
-      g.make_array(2)
-    g.send(:push, 1)
+        g.push_idx
+        g.push_literal_or_array(metadata)
+        g.make_array(2)
+      g.make_array(1)
+    g.send(:concat, 1)
     g.pop
   }
 }
