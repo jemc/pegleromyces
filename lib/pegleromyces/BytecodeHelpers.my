@@ -7,6 +7,12 @@ BytecodeHelpers < BasicObject {
   
   g: self # For consistency
   
+  puts_string: |string|
+    g.push_rubinius; g.push_literal(string); g.send(:puts, 1, true); g.pop
+  
+  inspect_top:
+    g.dup_top; g.push_rubinius; g.swap; g.send(:p, 1, true); g.pop
+  
   set_subject:   g.set_local  (0)
   push_subject:  g.push_local (0)
   set_idx:       g.set_local  (1)
