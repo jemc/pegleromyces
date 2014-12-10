@@ -41,16 +41,19 @@ BasicSpec {
     assert_equal(c.second, b)
   }
   
-  it "interprets a series of OrderedChoices in a right-associative tree": {
+  it "interprets a series of OrderedChoices as a right-associative tree": {
     a = new_pattern
     b = new_pattern
     c = new_pattern
-    d = a / b / c
-    assert_is_a(d, Patterns::OrderedChoice)
-    assert_is_a(d.second, Patterns::OrderedChoice)
-    assert_equal(d.first, a)
-    assert_equal(d.second.first, b)
-    assert_equal(d.second.second, c)
+    d = new_pattern
+    e = a / b / c / d
+    assert_is_a(e, Patterns::OrderedChoice)
+    assert_is_a(e.second, Patterns::OrderedChoice)
+    assert_is_a(e.second.second, Patterns::OrderedChoice)
+    assert_equal(e.first, a)
+    assert_equal(e.second.first, b)
+    assert_equal(e.second.second.first, c)
+    assert_equal(e.second.second.second, d)
   }
   
   it "creates a Concatenation with the '+' operator": {
@@ -62,16 +65,19 @@ BasicSpec {
     assert_equal(c.second, b)
   }
   
-  it "interprets a series of Concatenations in a right-associative tree": {
+  it "interprets a series of Concatenations as a right-associative tree": {
     a = new_pattern
     b = new_pattern
     c = new_pattern
-    d = a + b + c
-    assert_is_a(d, Patterns::Concatenation)
-    assert_is_a(d.second, Patterns::Concatenation)
-    assert_equal(d.first, a)
-    assert_equal(d.second.first, b)
-    assert_equal(d.second.second, c)
+    d = new_pattern
+    e = a + b + c + d
+    assert_is_a(e, Patterns::Concatenation)
+    assert_is_a(e.second, Patterns::Concatenation)
+    assert_is_a(e.second.second, Patterns::Concatenation)
+    assert_equal(e.first, a)
+    assert_equal(e.second.first, b)
+    assert_equal(e.second.second.first, c)
+    assert_equal(e.second.second.second, d)
   }
   
   it "creates a OneOrMore with the '+' operator used as a 'suffix' call": {

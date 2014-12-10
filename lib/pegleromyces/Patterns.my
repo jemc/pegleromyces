@@ -63,6 +63,19 @@ Patterns < EmptyObject {
                  NamedTextCapture  .new(inner:self, name:name)
     token: |name|
                  NamedTokenCapture .new(inner:self, name:name)
+    
+    [private]
+    
+    # Add |other| to |orig| in a right-associative tree of type |type|
+    binary_right_assoc: |orig, other, type| {
+      cursor = orig
+      loop {
+        unless(cursor.second.is_a?(type)) { break }
+        cursor = cursor.second
+      }
+      cursor.second = type.new(first:cursor.second, second:other)
+      orig
+    }
   }
   
   NegativePredicate << {
@@ -76,21 +89,17 @@ Patterns < EmptyObject {
   }
   
   OrderedChoice << {
-    # Build a right-associative tree if the first operand of another choice
-    "/": |other| {
-      self.second = OrderedChoice.new(first:self.second, second:other)
-      self
-    }
+    # Build a right-associative tree if the first operand of another "/"
+    "/": |other|
+      private.binary_right_assoc(self, other, OrderedChoice)
   }
   
   Concatenation << {
-    # Build a right-associative tree if the first operand of another choice
-    "+": |other=false| {
-      other && (
-        self.second = Concatenation.new(first:self.second, second:other)
-        self
-      ) || OneOrMore.new(inner:self)
-    }
+    # Build a right-associative tree if the first operand of another "+"
+    "+": |other=false|
+      other
+        && private.binary_right_assoc(self, other, Concatenation)
+        || OneOrMore.new(inner:self)
   }
   
   ##
