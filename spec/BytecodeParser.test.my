@@ -84,75 +84,77 @@ BasicSpec {
     
     # TODO: remove this hack for getting the processor methods
     builder = BasicObject {
-      var ast: BasicObject {
-        var delegate: Myco::ToolSet::Parser.new("",null,null)
-        method_missing: |meth, loc, *args| {
-          delegate.send(:"process_"meth"", loc.line, *args)
-        }
-        
-        var escape_encodings: {
-          hash = Hash.new
-          hash["\\a"] = "\a" # \a  0x07  Bell or alert
-          hash["\\b"] = "\b" # \b  0x08  Backspace
-          # TODO:            # \cx       Control-x
-          # TODO:            # \C-x      Control-x
-          hash["\\e"] = "\e" # \e  0x1b  Escape
-          hash["\\f"] = "\f" # \f  0x0c  Formfeed
-          # TODO:            # \M-\C-x   Meta-Control-x
-          hash["\\n"] = "\n" # \n  0x0a  Newline
-          # TODO:            # \nnn      Octal notation, where n is a digit
-          hash["\\r"] = "\r" # \r  0x0d  Carriage return
-          hash["\\s"] = "\s" # \s  0x20  Space
-          hash["\\t"] = "\t" # \t  0x09  Tab
-          hash["\\v"] = "\v" # \v  0x0b  Vertical tab
-          # TODO:            # \xnn      Hexadecimal notation, where n is a digit
-          hash
-        }
-        
-        # Encode escape characters in string literals
-        # TODO: rigorously test and refine
-        encode_escapes: |str| {
-          str.gsub(Regexp.new("\\.")) |substr| {
-            escape_encodings.fetch(substr, substr[-1])
-          }
-        }
-        
-        # Given a node,op list ([node, op, node, op, ... node]) and operator types,
-        # collapse the (node, op, node) groups where the operator is one of the types
-        #
-        # This function is meant to be called several times on the same list,
-        # with a different set of operator types each time, in order of precedence.
-        #
-        collapse: |input, *types, &block| {
-          output = []
-          
-          # Scan through, reducing or shifting based on the operator
-          loop {
-            (input.count > 2) || break
-            n0 = input.shift
-            op = input.shift
-            
-            (types.include?(op.type)) && (
-              n1 = input.shift
-              
-              result = block
-                && block.call(n0,op,n1)
-                || invoke(op, n0, op.sym, argass(n1, [n1]))
-              input.unshift(result)
-              true
-            ) || (
-              output.push(n0)
-              output.push(op)
-            )
-          }
-          
-          # Push the last item remaining
-          output.push(input.shift)
-          
-          input.replace(output)
+      ast: instance_variable_get(:"@ast")
+      var escape_encodings: {
+        hash = Hash.new
+        hash["\\a"] = "\a" # \a  0x07  Bell or alert
+        hash["\\b"] = "\b" # \b  0x08  Backspace
+        # TODO:            # \cx       Control-x
+        # TODO:            # \C-x      Control-x
+        hash["\\e"] = "\e" # \e  0x1b  Escape
+        hash["\\f"] = "\f" # \f  0x0c  Formfeed
+        # TODO:            # \M-\C-x   Meta-Control-x
+        hash["\\n"] = "\n" # \n  0x0a  Newline
+        # TODO:            # \nnn      Octal notation, where n is a digit
+        hash["\\r"] = "\r" # \r  0x0d  Carriage return
+        hash["\\s"] = "\s" # \s  0x20  Space
+        hash["\\t"] = "\t" # \t  0x09  Tab
+        hash["\\v"] = "\v" # \v  0x0b  Vertical tab
+        # TODO:            # \xnn      Hexadecimal notation, where n is a digit
+        hash
+      }
+      
+      # Encode escape characters in string literals
+      # TODO: rigorously test and refine
+      encode_escapes: |str| {
+        str.gsub(Regexp.new("\\.")) |substr| {
+          escape_encodings.fetch(substr, substr[-1])
         }
       }
+      
+      # Given a node,op list ([node, op, node, op, ... node]) and operator types,
+      # collapse the (node, op, node) groups where the operator is one of the types
+      #
+      # This function is meant to be called several times on the same list,
+      # with a different set of operator types each time, in order of precedence.
+      #
+      collapse: |input, *types, &block| {
+        output = []
+        
+        # Scan through, reducing or shifting based on the operator
+        loop {
+          (input.count > 2) || break
+          n0 = input.shift
+          op = input.shift
+          
+          (types.include?(op.type)) && (
+            n1 = input.shift
+            
+            result = block
+              && block.call(n0,op,n1)
+              || ast.invoke(op, n0, op.sym, ast.argass(n1, [n1]))
+            input.unshift(result)
+            true
+          ) || (
+            output.push(n0)
+            output.push(op)
+          )
+        }
+        
+        # Push the last item remaining
+        output.push(input.shift)
+        
+        input.replace(output)
+      }
     }
+    Myco::ToolSet::Parser.send(:undef_method, :hash)
+    Myco::ToolSet::Parser.instance_methods.each |name| {
+      new_name = name.to_s[Regexp.new("(?<=process_).*")]
+      if(new_name) {
+        Myco::ToolSet::Parser.send(:alias_method, new_name.to_sym, name)
+      }
+    }
+    builder.instance_variable_set(:"@ast", Myco::ToolSet::Parser.new("dummy", "dummy", 0))
     parser.component.declare_meme(:new_builder) { builder }
     
     # TODO: Move this to somewhere encapsulated and reasonable

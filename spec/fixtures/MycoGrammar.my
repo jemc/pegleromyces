@@ -103,20 +103,20 @@ rule lit_simple:
 rule lit_string:
   r((T.string_begin  + T.string_body[:tb]  + T.string_end) /
     (T.sstring_begin + T.sstring_body[:tb] + T.sstring_end))
-    { ast.lit(tb, ast.encode_escapes(tb.text)) }
+    { ast.lit(tb, encode_escapes(tb.text)) }
 
 rule lit_string_as_symbol:
   r((T.string_begin  + T.string_body[:tb]  + T.string_end) /
     (T.sstring_begin + T.sstring_body[:tb] + T.sstring_end))
-    { ast.lit(tb, ast.encode_escapes(tb.text).to_sym) }
+    { ast.lit(tb, encode_escapes(tb.text).to_sym) }
 
 rule lit_symstr:
   r(T.symstr_begin + T.string_body[:tb] + T.string_end)
-    { ast.lit(tb, ast.encode_escapes(tb.text).to_sym) }
+    { ast.lit(tb, encode_escapes(tb.text).to_sym) }
 
 rule category_name:
   r(T.catgry_begin + T.catgry_body[:tb] + T.catgry_end)
-    { ast.lit(tb, ast.encode_escapes(tb.text).to_sym) }
+    { ast.lit(tb, encode_escapes(tb.text).to_sym) }
 
 ##
 # String interpolations / juxtapositions
@@ -305,7 +305,7 @@ rule invoke_assignment:
     lhs.name = (""lhs.name"=").to_sym
     orig_arguments = lhs.arguments && lhs.arguments.body || []
     arg_order = lhs.name==:"[]=" && [*orig_arguments, rhs] || [rhs, *orig_arguments]
-    lhs.arguments = node(:arrass, rhs, arg_order)
+    lhs.arguments = ast.arrass(rhs, arg_order)
     lhs
   }
 
@@ -383,11 +383,11 @@ rule in_arg_list:
 / r(in_arg_block[:n0]) { [n0] }
 
 rule arg_list:
-  r(T.args_begin[:tb] + arg_sep_opt + in_arg_list[:nlist].- + arg_sep_opt + T.args_end)
+  r(T.args_begin[:tb] + arg_sep_opt + in_arg_list.-[:nlist] + arg_sep_opt + T.args_end)
     { ast.argass(tb, (nlist || [])) }
 
 rule lit_array:
-  r(T.array_begin[:tb] + arg_sep_opt + in_arg_list[:nlist].- + arg_sep_opt + T.array_end)
+  r(T.array_begin[:tb] + arg_sep_opt + in_arg_list.-[:nlist] + arg_sep_opt + T.array_end)
     { ast.arrass(tb, (nlist || [])) }
 
 ##
@@ -433,14 +433,14 @@ rule param_list:
   loop { plist[0] && plist[0][0] == :block    || break; block   .push(plist.shift[1]) }
   
   required = required
-  optional = null;  optional.empty? || (optional = node(:block, tb, optional))
+  optional.empty? && (optional = null; true) || (optional = ast.block(tb, optional))
   rest     = rest.first
-  post     = nil
-  kwargs   = null;  kwargs.empty?   || (optional = node(:block, tb, kwargs))
+  post     = null
+  kwargs.empty?   && (kwargs   = null; true) || (kwargs   = ast.block(tb, kwargs))
   kwrest   = kwrest.first
   block    = block.first
   
-  node(:args, tb, required, optional, rest, post, kwargs, kwrest, block)
+  ast.args(tb, required, optional, rest, post, kwargs, kwrest, block)
 }
 
 ##
@@ -471,14 +471,14 @@ rule left_chained_atoms:
   nlist.unshift(n0)
   nlist.send(:"flatten!")
   
-  ast.collapse(nlist, :t_op_exp)
-  ast.collapse(nlist, :t_op_mult, :t_op_div, :t_op_mod)
-  ast.collapse(nlist, :t_op_plus, :t_op_minus)
-  ast.collapse(nlist, :t_op_compare)
-  ast.collapse(nlist, :t_op_and, :t_op_or) |n0,op,n1| {
+  collapse(nlist, :t_op_exp)
+  collapse(nlist, :t_op_mult, :t_op_div, :t_op_mod)
+  collapse(nlist, :t_op_plus, :t_op_minus)
+  collapse(nlist, :t_op_compare)
+  collapse(nlist, :t_op_and, :t_op_or) |n0,op,n1| {
     type = (((op.type == :t_op_and) && :and)
          || ((op.type == :t_op_or)  && :or))
-    node(type, op, n0, n1)
+    ast.send(type, op, n0, n1)
   }
   
   # There should only be one resulting node left
@@ -510,7 +510,7 @@ rule left_chained_invocations:
   nlist.unshift(n0)
   nlist.send(:"flatten!")
   
-  ast.collapse(nlist, :t_dot, :t_quest) |n0,op,n1| {
+  collapse(nlist, :t_dot, :t_quest) |n0,op,n1| {
     (op.type == :t_dot)
       && (n1.receiver=n0; n1)
       || node(:t_quest, op, n0, n1)
@@ -528,7 +528,7 @@ rule left_chained_invocations:
 
 rule unary_operation:
   r(T.op_not[:to] + expr_atom[:n0])
-    { ast.invoke(to, n0, :"!", nil) }
+    { ast.invoke(to, n0, :"!", null) }
 
 ##
 # Memes and etc..
