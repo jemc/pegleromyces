@@ -19,6 +19,8 @@ BytecodeHelpers < BasicObject {
   push_idx:      g.push_local (1)
   set_captures:  g.set_ivar   (:"@captures")
   push_captures: g.push_ivar  (:"@captures")
+  set_memo_for:  |name| g.set_ivar  (:"@memo_for_"name"")
+  push_memo_for: |name| g.push_ivar (:"@memo_for_"name"")
   
   pop_to_set_idx:
     g.set_idx; g.pop
@@ -34,6 +36,57 @@ BytecodeHelpers < BasicObject {
   
   push_subject_at_idx:
     g.push_subject; g.push_idx; g.send(:chr_at, 1)
+  
+  push_new_hash:
+    g.push_cpath_top; g.find_const(:"Hash"); g.send(:new, 0)
+  
+  # Set the memo ivar to a new hash if it doesn't already exist
+  memo_or_eq_new_hash: |name| {
+    memo_exists_label = g.new_label
+    
+    g.push_memo_for(name)
+    g.goto_if_true(memo_exists_label)
+    g.push_new_hash
+    g.set_memo_for(name)
+    g.pop # ivar
+    memo_exists_label.set!
+  }
+  
+  # Copy the top two values into the memo ivar for |name| at the current idx.
+  copy_result_to_memo: |name| {
+    g.dup
+    g.push_captures
+    g.make_array(2) # [result_idx, result_captures]
+    
+    g.push_memo_for(name)
+      g.swap # [result_idx, result_captures]
+      g.push_idx # idx
+      g.swap # TODO: use rotate
+    g.send(:"[]=", 2)
+    g.pop
+  }
+  
+  # Goto the given |label| and push the result values if a memoized result
+  # exists for the given |name| at the current idx.
+  goto_if_memo_for_idx: |name, label| {
+    skip_label = g.new_label
+    
+    g.push_memo_for(name)
+      g.push_idx
+    g.send(:"[]", 1)
+    g.dup # dup the result to retain after goto test
+    g.goto_if_nil(skip_label)
+    
+    # Shift result_idx onto the stack and swap with array
+    g.shift_array; g.swap
+    # Shift result_captures, set to @captures, and pop
+    g.shift_array; g.set_captures; g.pop
+    g.pop # pop the empty containing array
+    g.goto(label)
+    
+    skip_label.set!
+    g.pop
+  }
   
   # Increment the idx local by the current number at the top of the stack
   # Saves the new idx to @highest_idx ivar if it is highest

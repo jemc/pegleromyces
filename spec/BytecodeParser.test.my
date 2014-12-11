@@ -46,6 +46,22 @@ BasicSpec {
     assert_equal(parser.end_idx, 3)
   }
   
+  it "skips memoized rule calls without result corruption": {
+    parser = new_parser
+    parser.grammar = Grammar {
+      [rules]
+      rule root: moot
+      rule moot:
+        (array[:root] + str('NO')) / (array[:root] + str('NOPE')) / array[:root]
+      rule array:
+        r(str('[').token(:foo)[:t0] + (!str(']') + any).*[:list] + str(']'))
+          { [:array, t0.line, *list.map(&:to_sym)] }
+    }
+    parser.parse('[abc]')
+    assert(parser.end_idx)
+    assert_equal(parser.result[:root], [:array, 1, :a, :b, :c])
+  }
+  
   it "can save a parser to a file to load and run it later": {
     parser = new_parser
     parser.grammar = Grammar {

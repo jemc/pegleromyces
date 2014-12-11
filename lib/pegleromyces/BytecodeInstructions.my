@@ -360,25 +360,51 @@ BytecodeInstructions < BasicObject {
   }
   
   # Call the compiled rule by |name| and continue or fail based on the result.
-  call: |name| {
-    local_done = g.new_label
+  call: |name, memoize=true| {
+    result_check      = g.new_label
+    memo_result_check = g.new_label
+    local_success     = g.new_label
+    local_fail        = g.new_label
     
+    # Push @captures onto stack and set @captures to a new empty array
     g.push_temp_captures
     
+    if(memoize) {
+      # Check if a memoized result exists;
+      # If one does, go straight to memo_result_check label
+      g.memo_or_eq_new_hash(name)
+      g.goto_if_memo_for_idx(name, memo_result_check)
+    }
+    
+    # Call the method; sets @captures and returns the result_idx (or nil)
     g.push_self
       g.push_subject
       g.push_idx
     g.send(name, 2)
-    g.dup_top # duplicate the result so one will be left after the if_true check
-    g.goto_if_true(local_done)
+    
+    # Check result and memoize the result
+    result_check.set!
+    g.copy_result_to_memo(name)
+    g.dup_top
+    g.goto_if_true(local_success)
+    g.goto(local_fail)
+    
+    if(memoize) {
+      # Check result, but skip memo copy
+      memo_result_check.set!
+      g.dup_top
+      g.goto_if_true(local_success)
+      g.goto(local_fail)
+    }
     
     # Failure, reject index and captures
+    local_fail.set!
     g.pop # reject idx (which is actually null here)
     g.pop_to_reject_captures
     g.goto(g.overall_fail)
     
     # Success, accept new index and captures
-    local_done.set!
+    local_success.set!
     g.pop_to_set_idx # set to the new index given by the call's return value
     g.pop_to_accept_captures
   }
