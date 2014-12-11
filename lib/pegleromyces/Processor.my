@@ -194,23 +194,26 @@ Processor < BasicObject {
     captures = pop_layer
     start_idx = ridx_stack.pop
     
-    env_captures = captures
-      .select |k,v| { k.is_a?(Symbol) }
-      .map    |k,v| { [k,v.last] }
-      .to_h
+    # Set up the reduction environment
+    code.scope = reduction_env_cscope
+    reduction_env.builder = builder
+    reduction_env.captures = captures.map |k,v| { [k,v.last] }.to_h
     
-    # TODO: clean up and optimize this
-    cscope = ::Rubinius::ConstantScope.new(Patterns::Reduction::Environment)
-    code.scope = cscope
-    env = Patterns::Reduction::Environment { }
-    env.component.declare_meme(:"!", [], code)
-    env.captures = env_captures
-    env.builder = builder
-    
-    # The '!' operator on the environment invokes the action to get a value
-    # Store with the string index as the key so the reduction can be captured
-    value = env.__send__(:"!", *args)
+    # Invoke the reduction action to get a value
+    # Store with the string index as the key so the value can be recaptured
+    value = code.invoke(
+      code.name
+      Patterns::Reduction::Environment
+      reduction_env
+      []
+      null
+    )
     store_value = [[start_idx, idx], value]
     capt_stack.last.store(idx, store_value)
   }
+  
+  var reduction_env:
+    Patterns::Reduction::Environment { }
+  var reduction_env_cscope:
+    ::Rubinius::ConstantScope.new(Patterns::Reduction::Environment) # TODO: fix
 }
