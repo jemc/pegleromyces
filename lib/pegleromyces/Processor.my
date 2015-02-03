@@ -54,7 +54,7 @@ Processor < BasicObject {
   
   final_captures:
     pop_layer
-      .select |k,v| { k.is_a?(Symbol) }
+      .select |k,v| { k.is_a?(::Symbol) }
       .map    |k,v| { [k,v.last] }
       .to_h
   
@@ -162,7 +162,7 @@ Processor < BasicObject {
     # Try to find a group of "anonymous" captures by index first
     value = []
     captures.each |k,v| {
-      (k.is_a?(Fixnum) && k<=idx && k>start_idx) && (
+      (k.is_a?(::Fixnum) && k<=idx && k>start_idx) && (
         loc = v.first
         (loc.first>=start_idx) && (
           value.push(v.last)
