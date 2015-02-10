@@ -28,8 +28,8 @@ Machine < BasicObject, Instructions {
   
   # Execute the root rule instruction sequence over the given subject
   execute: loop {
-    !ip && (handle_fail; true) || (
-      (ip==true) && (break; true) || send(*sequence_table.fetch(ipk)[ip])
+    ip |? handle_fail ?? (
+      (ip==true) &? break ?? send(*sequence_table.fetch(ipk)[ip])
     )
   }
   

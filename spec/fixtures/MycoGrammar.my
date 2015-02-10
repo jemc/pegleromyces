@@ -215,7 +215,7 @@ rule category:
   r(category_name[:n0] + category_sepd_exprs.-[:nlist]
       + !!(arg_sep_opt + (T.catgry_begin / T.declare_end)))
       { ast.category(n0, n0,
-        (nlist && ast.block(nlist.first, nlist) || ast.null(n0))) }
+        (nlist &? ast.block(nlist.first, nlist) ?? ast.null(n0))) }
 
 rule copen:
   r(constant[:n0] + C.spc_nl.* + T.reopen[:tb] + C.spc_nl.* + T.declare_begin + declobj_expr_body[:n1])
@@ -303,8 +303,8 @@ rule invoke_assignment:
   r(invoke_assignment_lhs[:lhs] + C.spc_nl.* + T.assign[:to] + C.spc_nl.* + assign_rhs[:rhs])
   {
     lhs.name = (""lhs.name"=").to_sym
-    orig_arguments = lhs.arguments && lhs.arguments.body || []
-    arg_order = lhs.name==:"[]=" && [*orig_arguments, rhs] || [rhs, *orig_arguments]
+    orig_arguments = lhs.arguments &? lhs.arguments.body ?? []
+    arg_order = lhs.name==:"[]=" &? [*orig_arguments, rhs] ?? [rhs, *orig_arguments]
     lhs.arguments = ast.arrass(rhs, arg_order)
     lhs
   }
@@ -425,18 +425,18 @@ rule param_list:
   kwrest   = []
   block    = []
   
-  loop { plist[0] && plist[0][0] == :required || break; required.push(plist.shift[1]) }
-  loop { plist[0] && plist[0][0] == :optional || break; optional.push(plist.shift[1]) }
-  loop { plist[0] && plist[0][0] == :rest     || break; rest    .push(plist.shift[1]) }
-  loop { plist[0] && plist[0][0] == :kwargs   || break; kwargs  .push(plist.shift[1]) }
-  loop { plist[0] && plist[0][0] == :kwrest   || break; kwrest  .push(plist.shift[1]) }
-  loop { plist[0] && plist[0][0] == :block    || break; block   .push(plist.shift[1]) }
+  loop { plist[0] &? plist[0][0] == :required ?? break; required.push(plist.shift[1]) }
+  loop { plist[0] &? plist[0][0] == :optional ?? break; optional.push(plist.shift[1]) }
+  loop { plist[0] &? plist[0][0] == :rest     ?? break; rest    .push(plist.shift[1]) }
+  loop { plist[0] &? plist[0][0] == :kwargs   ?? break; kwargs  .push(plist.shift[1]) }
+  loop { plist[0] &? plist[0][0] == :kwrest   ?? break; kwrest  .push(plist.shift[1]) }
+  loop { plist[0] &? plist[0][0] == :block    ?? break; block   .push(plist.shift[1]) }
   
   required = required
-  optional.empty? && (optional = null; true) || (optional = ast.block(tb, optional))
+  optional.empty? &? (optional = null) ?? (optional = ast.block(tb, optional))
   rest     = rest.first
   post     = null
-  kwargs.empty?   && (kwargs   = null; true) || (kwargs   = ast.block(tb, kwargs))
+  kwargs.empty?   &? (kwargs   = null) ?? (kwargs   = ast.block(tb, kwargs))
   kwrest   = kwrest.first
   block    = block.first
   
@@ -476,8 +476,8 @@ rule left_chained_atoms:
   collapse(nlist, :t_op_plus, :t_op_minus)
   collapse(nlist, :t_op_compare)
   collapse(nlist, :t_op_and, :t_op_or) |n0,op,n1| {
-    type = (((op.type == :t_op_and) && :and)
-         || ((op.type == :t_op_or)  && :or))
+    type = (op.type == :t_op_and &? :and)
+        ?? (op.type == :t_op_or  &? :or)
     ast.send(type, op, n0, n1)
   }
   
@@ -512,8 +512,8 @@ rule left_chained_invocations:
   
   collapse(nlist, :t_dot, :t_quest) |n0,op,n1| {
     (op.type == :t_dot)
-      && (n1.receiver=n0; n1)
-      || node(:t_quest, op, n0, n1)
+      &? (n1.receiver=n0; n1)
+      ?? node(:t_quest, op, n0, n1)
   }
   
   # There should only be one resulting node left
@@ -567,7 +567,7 @@ rule meme_expr_body:
 
 rule paren_expr_body:
   r(expr_sep_opt + meme_sepd_exprs[:nlist] + T.paren_end[:te])
-    { nlist.count==1 && nlist.first || ast.block(nlist.first, nlist) }
+    { nlist.count==1 &? nlist.first ?? ast.block(nlist.first, nlist) }
 / r(expr_sep_opt + T.paren_end[:te])
     { ast.null(te) }
 

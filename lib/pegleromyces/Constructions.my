@@ -148,12 +148,11 @@ Constructions < EmptyObject {
   
   NamedCapture << {
     sequence: {
-      (inner.is_a?(OneOrMore) || inner.is_a?(ZeroOrMore))
-      && (
+      (inner.is_a?(OneOrMore) || inner.is_a?(ZeroOrMore)) &? (
         inner.inlaid = [[:capture, [:m_split, captargs]]]
         a = inner.sequence
         [[:capture, [:m_start]], *a, [:capture, [:m_end, captargs]]]
-      ) || (
+      ) ?? (
         a = inner.sequence
         [[:capture, [:c_start]], *a, [:capture, [:c_end, captargs]]]
       )

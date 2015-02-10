@@ -127,15 +127,14 @@ BasicSpec {
           n0 = input.shift
           op = input.shift
           
-          (types.include?(op.type)) && (
+          types.include?(op.type) &? (
             n1 = input.shift
             
             result = block
-              && block.call(n0,op,n1)
-              || ast.invoke(op, n0, op.sym, ast.argass(n1, [n1]))
+              &? block.call(n0,op,n1)
+              ?? ast.invoke(op, n0, op.sym, ast.argass(n1, [n1]))
             input.unshift(result)
-            true
-          ) || (
+          ) ?? (
             output.push(n0)
             output.push(op)
           )

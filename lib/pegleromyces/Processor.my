@@ -81,12 +81,12 @@ Processor < BasicObject {
     # indices are within the bounds we are looking for.
     use_reduction = false
     value = captures[idx]
-    value && (
+    value &? (
       loc = value.first
       value = value.last
-      (loc.first>=start_idx) && (loc.last<=idx) && (
+      ((loc.first>=start_idx) && (loc.last<=idx)) &? (
         use_reduction = true
-      ) || (
+      ) ?? (
         value = null
       )
     )

@@ -136,5 +136,7 @@ BytecodeHelpers < BasicObject {
     ary.each |lit| { g.push_literal_or_array(lit) }; make_array(ary.size)
   
   push_literal_or_array: |item|
-    item.is_a?(Array) && (push_literal_array(item); true) || push_literal(item)
+    item.is_a?(Array)
+      &? push_literal_array(item)
+      ?? push_literal(item)
 }

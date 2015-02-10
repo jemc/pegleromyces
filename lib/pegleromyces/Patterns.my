@@ -49,14 +49,14 @@ Patterns < EmptyObject {
     "!":         NegativePredicate .new(inner:self)
     "/": |other| OrderedChoice     .new(first:self, second:other)
     "+": |other=false|
-      other && Concatenation       .new(first:self, second:other)
-            || OneOrMore           .new(inner:self)
+      other &? Concatenation       .new(first:self, second:other)
+            ?? OneOrMore           .new(inner:self)
     "-": |other=false|
-      other && ErrorCondition      .new() # TODO: add exception handling to Myco
-            || ZeroOrOne           .new(inner:self)
+      other &? ErrorCondition      .new() # TODO: add exception handling to Myco
+            ?? ZeroOrOne           .new(inner:self)
     "*": |other=false|
-      other && ErrorCondition      .new()
-            || ZeroOrMore          .new(inner:self)
+      other &? ErrorCondition      .new()
+            ?? ZeroOrMore          .new(inner:self)
     
     "[]": |name| NamedCapture      .new(inner:self, name:name)
     text: |name=:text|
@@ -98,8 +98,8 @@ Patterns < EmptyObject {
     # Build a right-associative tree if the first operand of another "+"
     "+": |other=false|
       other
-        && private.binary_right_assoc(self, other, Concatenation)
-        || OneOrMore.new(inner:self)
+        &? private.binary_right_assoc(self, other, Concatenation)
+        ?? OneOrMore.new(inner:self)
   }
   
   ##

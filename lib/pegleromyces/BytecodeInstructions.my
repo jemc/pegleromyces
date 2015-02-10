@@ -95,13 +95,12 @@ BytecodeInstructions < BasicObject {
     
     NamedCapture << {
       bytecode: |m| {
-        (inner.is_a?(OneOrMore) || inner.is_a?(ZeroOrMore))
-        && (
+        (inner.is_a?(OneOrMore) || inner.is_a?(ZeroOrMore)) &? (
           inner.inlaid = Proc.new { m.capture(:m_split, captargs) }
           m.capture(:m_start)
           inner.bytecode(m)
           m.capture(:m_end, captargs)
-        ) || (
+        ) ?? (
           m.capture(:c_start)
           inner.bytecode(m)
           m.capture(:c_end, captargs)
