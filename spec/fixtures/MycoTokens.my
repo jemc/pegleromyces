@@ -49,6 +49,9 @@ MycoTokens: Grammar {
   token op_exp:       str('**')
   token op_and:       str('&&')
   token op_or:        str('||')
+  token op_and_q:     str('&?')
+  token op_or_q:      str('|?')
+  token op_void_q:    str('??')
   token op_compare:   str('<=>') / str('=~') / str('==') /
                       str('<=') / str('>=') / str('<') / str('>')
   

@@ -452,6 +452,7 @@ rule left_op:
 / T.op_plus / T.op_minus
 / T.op_compare
 / T.op_and  / T.op_or
+/ T.op_and_q  / T.op_or_q / T.op_void_q
 
 # Achieve left-associativity through iteration.
 #
@@ -475,10 +476,9 @@ rule left_chained_atoms:
   collapse(nlist, :t_op_mult, :t_op_div, :t_op_mod)
   collapse(nlist, :t_op_plus, :t_op_minus)
   collapse(nlist, :t_op_compare)
-  collapse(nlist, :t_op_and, :t_op_or) |n0,op,n1| {
-    type = (op.type == :t_op_and &? :and)
-        ?? (op.type == :t_op_or  &? :or)
-    ast.send(type, op, n0, n1)
+  collapse(nlist, :t_op_and, :t_op_or,
+                  :t_op_and_q, :t_op_or_q, :t_op_void_q) |n0,op,n1| {
+    ast.branch_op(op, op.sym, n0, n1)
   }
   
   # There should only be one resulting node left
