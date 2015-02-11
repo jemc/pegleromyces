@@ -33,7 +33,7 @@ Processor < BasicObject {
     [row, col]
   }
   
-  Token < Object {
+  Token < BasicObject {
     var type
     var text
     var line
