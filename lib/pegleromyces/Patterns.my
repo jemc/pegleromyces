@@ -106,7 +106,7 @@ Patterns < EmptyObject {
   # Reduction and associated named captures implementation
   
   Reduction << {
-    Environment < BasicObject {
+    Environment < EmptyObject, BasicDecorators {
       var captures # A Hash of capture names to values
       var builder # The fallback delegate for methods that are not capture names
       
