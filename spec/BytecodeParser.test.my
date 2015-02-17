@@ -84,7 +84,8 @@ BasicSpec {
     
     # TODO: remove this hack for getting the processor methods
     builder = BasicObject {
-      ast: instance_variable_get(:"@ast")
+      var ast
+      
       var escape_encodings: {
         hash = Hash.new
         hash["\\a"] = "\a" # \a  0x07  Bell or alert
@@ -146,14 +147,7 @@ BasicSpec {
         input.replace(output)
       }
     }
-    Myco::ToolSet::Parser.send(:undef_method, :hash)
-    Myco::ToolSet::Parser.instance_methods.each |name| {
-      new_name = name.to_s[Regexp.new("(?<=process_).*")]
-      if(new_name) {
-        Myco::ToolSet::Parser.send(:alias_method, new_name.to_sym, name)
-      }
-    }
-    builder.instance_variable_set(:"@ast", Myco::ToolSet::Parser.new("dummy", "dummy", 0))
+    builder.ast = Myco::ToolSet::AST::Builder.new
     parser.component.declare_meme(:new_builder) { builder }
     
     # TODO: Move this to somewhere encapsulated and reasonable
