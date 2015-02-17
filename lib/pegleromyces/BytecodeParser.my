@@ -56,13 +56,15 @@ BytecodeParser < BasicObject {
       g.push_cpath_top; g.find_const(:"Class")
       g.create_block(compile_generator(:__block__, :"(snippet)") |g| {
         prototype.instance_methods.each |name| {
-          g.push_rubinius
-          g.push_literal(name)
-          g.push_literal(prototype.instance_method(name).executable)
-          g.push_scope
-          g.push_variables
-          g.send(:method_visibility, 0)
-          g.send(:add_defn_method, 4)
+          code = prototype.instance_method(name).executable
+          if(code.is_a?(Rubinius::CompiledCode)) {
+            g.push_rubinius
+              g.push_literal(name)
+              g.push_literal(code)
+              g.push_scope
+              g.push_variables; g.send(:method_visibility, 0)
+            g.send(:add_defn_method, 4)
+          }
         }
       })
       g.send_with_block(:new, 0)
