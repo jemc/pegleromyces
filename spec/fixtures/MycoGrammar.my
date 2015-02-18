@@ -330,10 +330,10 @@ rule op_invoke: # Allow some binary operators to be invoked with a dot
 
 rule elem_invoke:
   r(lit_array[:na] + opt_invoke_body[:nlist])
-    { ast.invoke(na, null, :"[]", na, *nlist) }
+    { ast.invoke(na, null, :"[]", ast.argass(na, na.body), *nlist) }
 
 rule op_invoke_id:
-  left_op
+  left_op_normal
 
 ##
 # Argument lists
@@ -446,13 +446,18 @@ rule param_list:
 ##
 # Two-term operators
 
-rule left_op:
+left_op_normal:
   T.op_exp
 / T.op_mult / T.op_div / T.op_mod
 / T.op_plus / T.op_minus
 / T.op_compare
 / T.op_and  / T.op_or
+
+left_op_branch:
+  T.op_and  / T.op_or
 / T.op_and_q  / T.op_or_q / T.op_void_q
+
+rule left_op: left_op_normal / left_op_branch
 
 # Achieve left-associativity through iteration.
 #
@@ -513,7 +518,7 @@ rule left_chained_invocations:
   collapse(nlist, :t_dot, :t_quest) |n0,op,n1| {
     (op.type == :t_dot)
       &? (n1.receiver=n0; n1)
-      ?? node(:t_quest, op, n0, n1)
+      ?? ast.quest(op, n0, n1)
   }
   
   # There should only be one resulting node left
