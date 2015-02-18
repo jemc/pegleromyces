@@ -110,8 +110,8 @@ Patterns < EmptyObject {
       var captures # A Hash of capture names to values
       var builder # The fallback delegate for methods that are not capture names
       
-      method_missing: |name, *args|
-        captures.fetch(name) { builder.send(name, *args) }
+      method_missing: |name, *args, &block|
+        captures.fetch(name) { builder.send(name, *args, &block) }
       
       # Implement the action for the reduction in the '!' method.
       # It will have access to the captures via method_missing.
