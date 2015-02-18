@@ -79,7 +79,7 @@ BasicSpec {
     assert_equal(parser.result.fetch(:root), [:x, :y, :z])
   }
   
-  it "can match from the Myco grammar": {
+  it "can use the Myco grammar to parse itself": {
     parser = new_parser
     
     # TODO: remove this hack for getting the processor methods
@@ -149,33 +149,28 @@ BasicSpec {
     }
     builder.ast = Myco::ToolSet::AST::Builder.new
     parser.component.declare_meme(:new_builder) { builder }
+    parser.component.declare_meme(:new) { parser }
     
-    # TODO: Move this to somewhere encapsulated and reasonable
-    proto_file = "/tmp/pegleromyces_myco_prototype.my.rbc"
+    # Load the MycoGrammar into the parser
     grammar_file = ""Myco.cscope.myco_file.instance.dirname"/fixtures/MycoGrammar.my"
-    unless (::File.exists?(proto_file) &&
-            ::File.stat(proto_file).mtime >= ::File.stat(grammar_file).mtime) {
-      parser.grammar = Myco.eval_file(grammar_file, [], true, Myco.cscope)
-      parser.save_prototype(proto_file)
-    }
-    parser.load_prototype(proto_file)
+    STDOUT.print(0)
+    parser.grammar = Myco.eval_file(grammar_file, [], true, Myco.cscope)
     
-    examples = [
-      'Object {
-        foo: one
-      }'
-      [:declobj, [:array, [:const, :"Object"]], [:block, 
-        [:meme, :foo, [:array], [:args, :"*"], [:block, [:lambig, :one]]],
-      ]]
-    ]
+    # Integrate the parser into the Myco runtime implementation
+    old_parser = Myco::ToolSet::Parser::Implementation
+    Myco::ToolSet::Parser.const_set(:"Implementation", parser)
     
-    examples.each_slice(2) |input, output| {
-      parser.parse(input)
-      result = parser.result
-      result &? (
-        result = result.fetch(:root).body.to_sexp.last
-        assert_equal(result, output)
-      ) ?? parser.raise_error
-    }
+    # Load the MycoGrammar into the parser again (parsed by the current grammar)
+    system("rm "grammar_file".rbc")
+    STDOUT.print(1)
+    parser.grammar = Myco.eval_file(grammar_file, [], true, Myco.cscope)
+    
+    # Load the MycoGrammar into the parser again (parsed by the current grammar)
+    system("rm "grammar_file".rbc")
+    STDOUT.print(2)
+    parser.grammar = Myco.eval_file(grammar_file, [], true, Myco.cscope)
+    
+    # Restore the original runtime parser
+    Myco::ToolSet::Parser.const_set(:"Implementation", old_parser)
   }
 }
