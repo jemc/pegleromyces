@@ -36,8 +36,7 @@ rule declobj_expr_not_category:
 
 # Expressions allowable inside memes
 rule meme_expr:
-  return_arg_expr
-/ arg_expr
+  arg_expr
 
 # Expressions allowable as function arguments
 rule arg_expr:
@@ -273,13 +272,6 @@ rule cdefn:
 # declstr =
 #   constant_list:nc C.spc.+ declstr_body:nb
 #     ~node(:declstr, nc, nc, nb)
-
-##
-# Jumps
-
-rule return_arg_expr:
-  r(arg_expr[:n0] + C.spc.* + T.jump[:to])
-    { ast.return(to, n0) }
 
 ##
 # Assignment

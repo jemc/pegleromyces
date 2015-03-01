@@ -34,7 +34,6 @@ MycoTokens: Grammar {
   token float:        str('-').- + C.num.+ + str('.') + C.num.+
   token integer:      str('-').- + C.num.+
   
-  token jump:         str('->')
   token dot:          str('.')
   token quest:        str('.') + C.spc_nl.* + str('?')
   token scope:        str('::')
