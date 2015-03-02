@@ -1,17 +1,42 @@
 
 Processor < BasicObject {
-  var string
-  var capture_items
-  var builder
+  var string: ""        # The source string to be processed
+  var capture_items: [] # The stream of capture tokens to be processed
+  var builder: null     # The AST Builder to use in the reduction environment
   
-  storage starts
-  var gathered: []
+  # Process the inputs and return the final captures layer
+  process: setup; process_each; final_captures
+  
+  # A lightweight class used for string captures in the reduction environment
+  Token < BasicObject {
+    var type
+    var text
+    var row
+    var col
+    
+    inspect: [type, text, row, col].inspect
+    to_s:    [type, text, row, col].inspect
+    
+    line: row # alias
+    
+    sym:              text.to_sym
+    float:            text.to_f
+    integer: |base=0| text.to_inum(base, true)
+  }
+  
+  # The environment for performing reduction actions to build an AST in the PEG.
+  # It gives implicit access to both local captures and AST builder methods.
+  var reduction_env:
+    Patterns::Reduction::Environment { }
+  var reduction_env_cscope:
+    ::Rubinius::ConstantScope.new(Patterns::Reduction::Environment) # TODO: fix
   
   var cidx_stack: [] # A FILO stack of start indices for captures
   var midx_stack: [] # A FILO stack of start indices for multiplicit captures
   var ridx_stack: [] # A FILO stack of start indices for reductions
   var capt_stack: [] # A FILO stack of Hashes with capture names, values
   
+  # Given a string, return a map of indices of newline positions to line numbers
   memoize line_map_for: |string| {
     idx_hash = ::Hash.new
     idx_hash[0] = 0
@@ -26,6 +51,7 @@ Processor < BasicObject {
     idx_hash
   }
   
+  # Given an index and string, return the row (line) and column numbers
   position_of: |idx, string| {
     nl_idx = string.rindex("\n", idx) || 0
     row = line_map_for(string).fetch(nl_idx) + 1
@@ -33,21 +59,9 @@ Processor < BasicObject {
     [row, col]
   }
   
-  Token < BasicObject {
-    var type
-    var text
-    var line
-    
-    inspect: [type, text, line].inspect
-    to_s:    [type, text, line].inspect
-    
-    sym:      text.to_sym
-    float:    send("Float", text)
-    integer:  send("Integer", text)
-  }
-  
-  pop_layer:  capt_stack.pop
+  # Push or pop a layer to/from the capture stack
   push_layer: capt_stack.push(::Hash.new)
+  pop_layer:  capt_stack.pop
   
   setup:
     push_layer
@@ -58,8 +72,6 @@ Processor < BasicObject {
       .map    |k,v| { [k,v.last] }
       .to_h
   
-  process: setup; process_each; final_captures
-  
   process_each: capture_items.each |idx, metadata| {
     type     = metadata[0]
     captargs = metadata[1] || []
@@ -68,7 +80,7 @@ Processor < BasicObject {
   
   # Start of a named capture
   c_start: |idx| {
-    # Note the starting index of the text capture
+    # Note the starting index of the capture
     cidx_stack.push(idx)
   }
   
@@ -134,7 +146,8 @@ Processor < BasicObject {
     value = Token.new(
       type: name
       text: string.slice(start_idx, idx - start_idx)
-      line: pos.first
+      row: pos.first
+      col: pos.last
     )
     store_value = [[start_idx, idx], value]
     captures.store(idx, store_value)
@@ -201,18 +214,13 @@ Processor < BasicObject {
     # Invoke the reduction action to get a value
     # Store with the string index as the key so the value can be recaptured
     value = code.invoke(
-      code.name
-      Patterns::Reduction::Environment
-      reduction_env
-      []
-      null
+      code.name,
+      Patterns::Reduction::Environment,
+      reduction_env,
+      [],
+      null,
     )
     store_value = [[start_idx, idx], value]
     capt_stack.last.store(idx, store_value)
   }
-  
-  var reduction_env:
-    Patterns::Reduction::Environment { }
-  var reduction_env_cscope:
-    ::Rubinius::ConstantScope.new(Patterns::Reduction::Environment) # TODO: fix
 }
