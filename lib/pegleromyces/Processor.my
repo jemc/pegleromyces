@@ -5,7 +5,7 @@ Processor < BasicObject {
   var builder: null     # The AST Builder to use in the reduction environment
   
   # Process the inputs and return the final captures layer
-  process: setup; process_each; final_captures
+  process: setup; process_each; validate_state; final_captures
   
   # A lightweight class used for string captures in the reduction environment
   Token < BasicObject {
@@ -32,6 +32,8 @@ Processor < BasicObject {
     ::Rubinius::ConstantScope.new(Patterns::Reduction::Environment) # TODO: fix
   
   var cidx_stack: [] # A FILO stack of start indices for captures
+  var sidx_stack: [] # A FILO stack of start indices for string captures
+  var tidx_stack: [] # A FILO stack of start indices for token captures
   var midx_stack: [] # A FILO stack of start indices for multiplicit captures
   var ridx_stack: [] # A FILO stack of start indices for reductions
   var capt_stack: [] # A FILO stack of Hashes with capture names, values
@@ -78,6 +80,14 @@ Processor < BasicObject {
     send(type, idx, *captargs)
   }
   
+  validate_state: {
+    cidx_stack.empty? || raise("unbalanced cidx_stack: "cidx_stack"")
+    sidx_stack.empty? || raise("unbalanced sidx_stack: "sidx_stack"")
+    tidx_stack.empty? || raise("unbalanced tidx_stack: "tidx_stack"")
+    midx_stack.empty? || raise("unbalanced midx_stack: "midx_stack"")
+    ridx_stack.empty? || raise("unbalanced ridx_stack: "ridx_stack"")
+  }
+  
   # Start of a named capture
   c_start: |idx| {
     # Note the starting index of the capture
@@ -117,13 +127,13 @@ Processor < BasicObject {
   # Start of a named text capture
   s_start: |idx| {
     # Note the starting index of the text capture
-    cidx_stack.push(idx)
+    sidx_stack.push(idx)
   }
   
   # End of a named text capture
   s_end: |idx, name| {
     captures = capt_stack.last
-    start_idx = cidx_stack.pop
+    start_idx = sidx_stack.pop
     
     value = string.slice(start_idx, idx-start_idx)
     store_value = [[start_idx, idx], value]
@@ -134,13 +144,13 @@ Processor < BasicObject {
   # Start of a named token capture
   t_start: |idx| {
     # Note the starting index of the text capture
-    cidx_stack.push(idx)
+    tidx_stack.push(idx)
   }
   
   # End of a named token capture
   t_end: |idx, name| {
     captures = capt_stack.last
-    start_idx = cidx_stack.pop
+    start_idx = tidx_stack.pop
     pos = position_of(start_idx, string)
     
     value = Token.new(
