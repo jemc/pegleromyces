@@ -531,7 +531,11 @@ rule unary_operation:
 ##
 # Memes and etc..
 
-rule t_inln_sep:   !T.arg_sep + T.expr_sep
+# TODO: this should work without the call to 'inner'
+# Currently, without this call, an unbalanced tidx_stack occurs
+# in the Processor due to an extra :t_start capture symbol emitted
+# by the BytecodeParser with no matching :t_end to clear it.
+rule t_inln_sep:   !T.arg_sep.inner + T.expr_sep
 
 rule inln_sep:     (C.spc.* + t_inln_sep + C.spc.*).+
 rule inln_sep_opt: (C.spc / t_inln_sep).*
