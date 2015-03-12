@@ -120,12 +120,8 @@ rule category_name:
 ##
 # String interpolations / juxtapositions
 
-rule expr_atom_evstr:
-  r(expr_atom_not_string[:n0])
-    { ast.evstr(n0, n0) }
-
 rule dyn_string_part:
-  r(C.spc.* + expr_atom_evstr[:n0] + C.spc.* + lit_string[:n1])
+  r(C.spc.* + expr_atom_not_string[:n0] + C.spc.* + lit_string[:n1])
     { [n0,n1] }
 
 rule dyn_string_parts:
@@ -134,11 +130,11 @@ rule dyn_string_parts:
 
 rule dyn_string:
   r(lit_string[:n0] + dyn_string_parts[:nrest])
-    { ast.dstr(n0, n0.value, nrest) }
+    { ast.dstr(n0, [n0] + nrest) }
 
 rule dyn_symstr:
   r(lit_symstr[:n0] + dyn_string_parts[:nrest])
-    { ast.dsym(n0, n0.value.to_s, nrest) }
+    { ast.dsym(n0, [n0] + nrest) }
 
 ##
 # Constants
@@ -213,7 +209,7 @@ rule category_sepd_exprs:
 rule category:
   r(category_name[:n0] + category_sepd_exprs.-[:nlist]
       + !!(arg_sep_opt + (T.catgry_begin / T.declare_end)))
-      { ast.category(n0, n0,
+      { ast.category(n0, n0.value,
         (nlist &? ast.block(nlist.first, nlist) ?? ast.null(n0))) }
 
 rule copen:
@@ -314,15 +310,15 @@ opt_invoke_body: (r(C.spc_nl.* + invoke_body[:nx]) { nx }).-
 
 rule invoke:
   r(T.identifier[:tn] + opt_arg_list[:na] + opt_invoke_body[:nlist])
-    { ast.invoke(tn, null, tn.sym, na, *nlist) }
+    { ast.invoke(tn, null, tn.sym, na, *(nlist || [])) }
 
 rule op_invoke: # Allow some binary operators to be invoked with a dot
   r(op_invoke_id[:tn] + opt_arg_list[:na] + opt_invoke_body[:nlist])
-    { ast.invoke(tn, null, tn.sym, na, *nlist) }
+    { ast.invoke(tn, null, tn.sym, na, *(nlist || [])) }
 
 rule elem_invoke:
   r(lit_array[:na] + opt_invoke_body[:nlist])
-    { ast.invoke(na, null, :"[]", ast.argass(na, na.body), *nlist) }
+    { ast.invoke(na, null, :"[]", ast.argass(na, na.body), *(nlist || [])) }
 
 rule op_invoke_id:
   left_op_normal
@@ -363,7 +359,7 @@ rule in_arg_splat:
 
 rule in_arg_block:
   r(T.op_toproc[:to] + expr_atom[:n0])
-    { ast.block_pass(to, null, n0) }
+    { ast.blkarg(to, n0) }
 
 rule in_arg_list:
   r(in_arg_normals[:n0] + arg_sep + in_arg_kwargs[:n1] + arg_sep + in_arg_block[:n2]) { [*n0,n1,n2] }
@@ -407,12 +403,13 @@ rule param_sepds:
 
 rule param_list:
   r(T.params_begin[:tb] + T.params_end)
-    { ast.args(tb, nil, nil, nil, nil, nil, nil, nil) }
+    { ast.args(tb, [], [], null, [], [], null, null) } # TODO: investigate removing
 / r(T.params_begin[:tb] + param_sepds[:plist] + T.params_end)
     {
   required = []
   optional = []
   rest     = []
+  post     = []
   kwargs   = []
   kwrest   = []
   block    = []
@@ -420,17 +417,21 @@ rule param_list:
   loop { plist[0] &? plist[0][0] == :required ?? break; required.push(plist.shift[1]) }
   loop { plist[0] &? plist[0][0] == :optional ?? break; optional.push(plist.shift[1]) }
   loop { plist[0] &? plist[0][0] == :rest     ?? break; rest    .push(plist.shift[1]) }
+  loop { plist[0] &? plist[0][0] == :required ?? break; post    .push(plist.shift[1]) }
   loop { plist[0] &? plist[0][0] == :kwargs   ?? break; kwargs  .push(plist.shift[1]) }
   loop { plist[0] &? plist[0][0] == :kwrest   ?? break; kwrest  .push(plist.shift[1]) }
   loop { plist[0] &? plist[0][0] == :block    ?? break; block   .push(plist.shift[1]) }
   
   required = required
-  optional.empty? &? (optional = null) ?? (optional = ast.block(tb, optional))
+  optional = optional
   rest     = rest.first
-  post     = null
-  kwargs.empty?   &? (kwargs   = null) ?? (kwargs   = ast.block(tb, kwargs))
+  post     = post
+  kwargs   = kwargs
   kwrest   = kwrest.first
   block    = block.first
+  
+  # TODO: move these conversions to their respective reductions
+  block = block && ast.blkprm(tb, block)
   
   ast.args(tb, required, optional, rest, post, kwargs, kwrest, block)
 }
@@ -480,7 +481,7 @@ rule left_chained_atoms:
   
   # There should only be one resulting node left
   (nlist.count == 1)
-    || raise("Failed to fully collapse left_chained_invocations: "nlist"")
+    || raise("Failed to fully collapse left_chained_atoms: "nlist"")
   
   nlist.first
 }
