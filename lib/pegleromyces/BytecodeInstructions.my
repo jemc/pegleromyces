@@ -49,42 +49,42 @@ BytecodeInstructions < BasicObject {
     
     NegativePredicate << { bytecode: |m|
       m.neg_predicate(
-        Proc.new { inner.bytecode(m) }
+        &{ inner.bytecode(m) }
         inner.bytecode_can_capture
       )
     }
     PositivePredicate << { bytecode: |m|
       m.pos_predicate(
-        Proc.new { inner.bytecode(m) }
+        &{ inner.bytecode(m) }
         inner.bytecode_can_capture
       )
     }
     OneOrMore << { bytecode: |m|
       m.many(
-        Proc.new { inner.bytecode(m); inlaid.?call }
+        &{ inner.bytecode(m); inlaid.?call }
         inner.bytecode_can_capture
       )
     }
     ZeroOrOne << {
       bytecode: |m| {
         m.choice(
-          Proc.new { inner.bytecode(m) }
-          Proc.new { }
+          &{ inner.bytecode(m) }
+          &{ }
           inner.bytecode_can_capture
         )
       }
     }
     ZeroOrMore << { bytecode: |m|
       m.kleene(
-        Proc.new { inner.bytecode(m); inlaid.?call }
+        &{ inner.bytecode(m); inlaid.?call }
         inner.bytecode_can_capture
       )
     }
     OrderedChoice << {
       bytecode: |m| {
         m.choice(
-          Proc.new { first.bytecode(m) }
-          Proc.new { second.bytecode(m) }
+          &{ first.bytecode(m) }
+          &{ second.bytecode(m) }
           first.bytecode_can_capture
         )
       }
@@ -96,7 +96,7 @@ BytecodeInstructions < BasicObject {
     NamedCapture << {
       bytecode: |m| {
         (inner.is_a?(OneOrMore) || inner.is_a?(ZeroOrMore)) &? (
-          inner.inlaid = Proc.new { m.capture(:m_split, captargs) }
+          inner.inlaid = &{ m.capture(:m_split, captargs) }
           m.capture(:m_start)
           inner.bytecode(m)
           m.capture(:m_end, captargs)

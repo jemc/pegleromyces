@@ -13,8 +13,7 @@ Grammar < BasicObject, Patterns::ShorthandMethods {
     bytecode_can_capture: true
   }
   
-  var rule_table: Hash.new
-  var rule_table: Hash.new
+  var rule_table: ::Ruby::Hash.new
   
   # Force evaluation of the rule tree in a way that
   # doesn't get stuck in an infinite recursion.
@@ -37,7 +36,7 @@ Grammar < BasicObject, Patterns::ShorthandMethods {
   token: Decorator {
     apply: |meme| {
       orig_meme = meme.dup
-      meme.body = Proc.new { orig_meme.result.token(:"t_"meme.name"") }
+      meme.body = &{ orig_meme.result.token(:"t_"meme.name"") }
     }
     [transforms]
     cache: true

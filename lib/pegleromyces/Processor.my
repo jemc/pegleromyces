@@ -40,7 +40,7 @@ Processor < BasicObject {
   
   # Given a string, return a map of indices of newline positions to line numbers
   memoize line_map_for: |string| {
-    idx_hash = ::Hash.new
+    idx_hash = ::Ruby::Hash.new
     idx_hash[0] = 0
     count = 0
     idx = 0
@@ -62,7 +62,7 @@ Processor < BasicObject {
   }
   
   # Push or pop a layer to/from the capture stack
-  push_layer: capt_stack.push(::Hash.new)
+  push_layer: capt_stack.push(::Ruby::Hash.new)
   pop_layer:  capt_stack.pop
   
   setup:
@@ -70,7 +70,7 @@ Processor < BasicObject {
   
   final_captures:
     pop_layer
-      .select |k,v| { k.is_a?(::Symbol) }
+      .select |k,v| { k.is_a?(Symbol) }
       .map    |k,v| { [k,v.last] }
       .to_h
   
@@ -185,7 +185,7 @@ Processor < BasicObject {
     # Try to find a group of "anonymous" captures by index first
     value = []
     captures.each |k,v| {
-      (k.is_a?(::Fixnum) && k<=idx && k>start_idx) && (
+      (k.is_a?(Fixnum) && k<=idx && k>start_idx) && (
         loc = v.first
         (loc.first>=start_idx) && (
           value.push(v.last)

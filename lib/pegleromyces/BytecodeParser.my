@@ -53,7 +53,7 @@ BytecodeParser < BasicObject {
   
   save_prototype: |filename| {
     code = compile_code(:__script__, :"(snippet)") |g| {
-      g.push_cpath_top; g.find_const(:"Class")
+      g.push_cpath_top; g.find_const(:Class)
       g.create_block(compile_generator(:__block__, :"(snippet)") |g| {
         prototype.instance_methods.each |name| {
           code = prototype.instance_method(name).executable

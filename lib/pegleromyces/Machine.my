@@ -23,7 +23,7 @@ Machine < BasicObject, Instructions {
   var subject: []
   
   # The sequence of instructions to execute for each rule name
-  var sequence_table: Hash.new
+  var sequence_table: ::Ruby::Hash.new
   
   
   # Execute the root rule instruction sequence over the given subject
