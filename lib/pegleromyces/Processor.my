@@ -56,7 +56,7 @@ Processor < BasicObject {
   # Given an index and string, return the row (line) and column numbers
   position_of: |idx, string| {
     nl_idx = string.rindex("\n", idx) || 0
-    row = line_map_for(string).fetch(nl_idx) + 1
+    row = line_map_for(string).fetch(nl_idx) + 2
     col = idx - nl_idx
     [row, col]
   }

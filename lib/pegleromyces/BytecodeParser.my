@@ -120,7 +120,7 @@ BytecodeParser < BasicObject {
       self.error_col = pos.last
       self.error_string = \
       "Unexpected character near line: "error_row", column: "error_col".\n" \
-        string.each_line.to_a[error_row]"" \
+        string.each_line.to_a[error_row - 1]"" \
         (' ' * [(error_col - 1), 0].max)"^"
     }
     self.result
