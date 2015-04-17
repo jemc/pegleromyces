@@ -1,5 +1,5 @@
 
-BytecodeHelpers < BasicObject {
+BytecodeHelpers < BasicDecorators {
   ##
   # Bytecode Generation Helper Methods
   
