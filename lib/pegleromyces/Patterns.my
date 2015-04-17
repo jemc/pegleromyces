@@ -111,7 +111,7 @@ Patterns < EmptyObject {
       var builder # The fallback delegate for methods that are not capture names
       
       method_missing: |name, *args, &block|
-        captures.fetch(name) { builder.send(name, *args, &block) }
+        captures.fetch(name) { builder.__send__(name, *args, &block) }
       
       # Implement the action for the reduction in the '!' method.
       # It will have access to the captures via method_missing.
