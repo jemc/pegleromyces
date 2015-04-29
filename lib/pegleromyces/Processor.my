@@ -27,7 +27,7 @@ Processor < BasicObject {
   # The environment for performing reduction actions to build an AST in the PEG.
   # It gives implicit access to both local captures and AST builder methods.
   var reduction_env:
-    Patterns::Reduction::Environment { }
+    Patterns::Reduction::Environment.new
   var reduction_env_cscope:
     ::Rubinius::ConstantScope.new(Patterns::Reduction::Environment) # TODO: fix
   

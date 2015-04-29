@@ -1,6 +1,6 @@
 
 BytecodeParser < BasicObject {
-  var grammar: Grammar { }
+  var grammar: Grammar.new
   
   new_worker: set_up_worker(prototype.new)
   
@@ -21,7 +21,7 @@ BytecodeParser < BasicObject {
     construct = rule.construct_rule
     
     proto.dynamic_method(name, "(compiled parser)") |g| {
-      instructor = BytecodeInstructions { }
+      instructor = BytecodeInstructions.new
       instructor.g = g
       g.extend(BytecodeHelpers)
       

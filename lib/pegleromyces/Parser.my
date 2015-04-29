@@ -1,7 +1,7 @@
 
 Parser < BasicObject {
   
-  var grammar: Grammar { }
+  var grammar: Grammar.new
   var string: ""
   
   var result: null
