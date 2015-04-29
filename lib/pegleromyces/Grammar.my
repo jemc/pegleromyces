@@ -32,8 +32,7 @@ Grammar < BasicObject, Patterns::ShorthandMethods {
   
   [decorators]
   
-  token: TokenDecorator # TODO: avoid this hack
-  TokenDecorator: Decorator {
+  const token: Decorator {
     apply: |meme| {
       orig_meme = meme.dup
       meme.body = &{ orig_meme.result.token(:"t_"meme.name"") }
@@ -42,8 +41,7 @@ Grammar < BasicObject, Patterns::ShorthandMethods {
     cache: true
   }
   
-  rule: RuleDecorator # TODO: avoid this hack
-  RuleDecorator: Decorator {
+  const rule: Decorator {
     apply: |meme| {
       name = meme.name
       # TODO: use some kind of Decorator#wrap mechanism instead
