@@ -80,16 +80,16 @@ BytecodeParser < BasicObject {
   }
   
   set_up_worker: |worker| {
-    worker.instance_variable_set(:"@captures", [])
-    worker.instance_variable_set(:"@highest_idx", 0)
+    worker.__set_ivar__(:"@captures", [])
+    worker.__set_ivar__(:"@highest_idx", 0)
     worker
   }
   
   captures_of_worker: |worker|
-    worker.instance_variable_get(:"@captures")
+    worker.__get_ivar__(:"@captures")
   
   highest_idx_of_worker: |worker|
-    worker.instance_variable_get(:"@highest_idx")
+    worker.__get_ivar__(:"@highest_idx")
   
   new_processor: Processor.new(builder: new_builder)
   new_builder: Builder.new
