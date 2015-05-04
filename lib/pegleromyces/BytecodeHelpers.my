@@ -37,8 +37,8 @@ BytecodeHelpers < BasicDecorators {
   push_subject_at_idx:
     g.push_subject; g.push_idx; g.send(:chr_at, 1)
   
-  push_new_hash:
-    g.push_cpath_top; g.find_const(:Hash); g.send(:new, 0)
+  push_new_table:
+    g.push_rubinius; g.find_const(:LookupTable); g.send(:new, 0)
   
   # Set the memo ivar to a new hash if it doesn't already exist
   memo_or_eq_new_hash: |name| {
@@ -46,7 +46,7 @@ BytecodeHelpers < BasicDecorators {
     
     g.push_memo_for(name)
     g.goto_if_true(memo_exists_label)
-    g.push_new_hash
+    g.push_new_table
     g.set_memo_for(name)
     g.pop # ivar
     memo_exists_label.set!
