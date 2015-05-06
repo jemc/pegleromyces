@@ -96,7 +96,11 @@ BytecodeParser < BasicObject {
   
   
   # Match and process the given string using the current grammar
-  parse: |string, start_idx=0| {
+  parse: |string, rule:"root", start_idx:0| {
+    string    = string.to_s
+    rule      = rule.to_sym
+    start_idx = start_idx.to_i
+    
     worker = new_worker
     
     self.error_idx = null
@@ -104,7 +108,7 @@ BytecodeParser < BasicObject {
     self.error_col = null
     self.error_string = null
     self.result = null
-    self.end_idx = worker.root(string, start_idx)
+    self.end_idx = worker.__send__(rule, string, start_idx)
     
     processor = new_processor
     
