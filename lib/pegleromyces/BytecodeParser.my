@@ -1,5 +1,16 @@
 
 BytecodeParser < BasicObject {
+  State < BasicObject {
+    var end_idx
+    var result
+    
+    var error_idx
+    var error_row
+    var error_col
+    var error_string
+    raise_error: raise(SyntaxError, error_string)
+  }
+  
   var grammar: Grammar.new
   
   new_worker: set_up_worker(prototype.new)
@@ -101,41 +112,31 @@ BytecodeParser < BasicObject {
     rule      = rule.to_sym
     start_idx = start_idx.to_i
     
-    worker = new_worker
-    
-    self.error_idx = null
-    self.error_row = null
-    self.error_col = null
-    self.error_string = null
-    self.result = null
-    self.end_idx = worker.__send__(rule, string, start_idx)
-    
+    worker    = new_worker
     processor = new_processor
+    state     = State.new(
+      error_idx:    null
+      error_row:    null
+      error_col:    null
+      error_string: null
+      result:       null
+      end_idx:      worker.__send__(rule, string, start_idx),
+    )
     
-    if(end_idx) {
+    state.end_idx &? (
       processor.string = string
       processor.capture_items = captures_of_worker(worker)
-      self.result = processor.process
-    }
-    if(!end_idx) {
-      self.error_idx = highest_idx_of_worker(worker)
-      pos = processor.position_of(error_idx, string)
-      self.error_row = pos.first
-      self.error_col = pos.last
-      self.error_string = \
-      "Unexpected character near line: "error_row", column: "error_col".\n" \
-        string.each_line.to_a[error_row - 1]"" \
-        (' ' * [(error_col - 1), 0].max)"^"
-    }
-    self.result
+      state.result = processor.process
+    ) ?? (
+      state.error_idx = highest_idx_of_worker(worker)
+      pos = processor.position_of(state.error_idx, string)
+      state.error_row = pos.first
+      state.error_col = pos.last
+      state.error_string = \
+      "Unexpected character near line: "state.error_row", column: "state.error_col".\n" \
+        string.each_line.to_a[state.error_row - 1]"" \
+        (' ' * [(state.error_col - 1), 0].max)"^"
+    )
+    state
   }
-  
-  var end_idx
-  var result
-  
-  var error_idx
-  var error_row
-  var error_col
-  var error_string
-  raise_error: raise(SyntaxError, error_string)
 }
