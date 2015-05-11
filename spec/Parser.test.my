@@ -38,10 +38,6 @@ BasicSpec {
   
   [tests]
   
-  it "starts with a grammar that matches any string": {
-    assert(new_parser.parse("xyz").result)
-  }
-  
   it "can parse from a basic grammar": {
     parser = new_parser
     parser.grammar = basic_grammar
