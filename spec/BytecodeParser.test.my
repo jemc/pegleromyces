@@ -13,8 +13,8 @@ BasicSpec {
       rule root:
         str('abc') / str('x') + set('Yy') + !str('y') + !!range('a','z') + any
     }
-    parser.parse('xyz')
-    assert_equal(parser.end_idx, 3)
+    state = parser.parse('xyz')
+    assert_equal(state.end_idx, 3)
   }
   
   it "can match from a grammar with multiplicit patterns": {
@@ -23,8 +23,8 @@ BasicSpec {
       [rules]
       rule root: str('x').+ + str('y').* + str('z').-
     }
-    parser.parse('xxz')
-    assert_equal(parser.end_idx, 3)
+    state = parser.parse('xxz')
+    assert_equal(state.end_idx, 3)
   }
   
   it "can match from a grammar with rule calls": {
@@ -42,8 +42,8 @@ BasicSpec {
       rule lower: range('a','z')
       rule any_lower: !!lower + any
     }
-    parser.parse('xyz')
-    assert_equal(parser.end_idx, 3)
+    state = parser.parse('xyz')
+    assert_equal(state.end_idx, 3)
   }
   
   it "skips memoized rule calls without result corruption": {
@@ -57,9 +57,9 @@ BasicSpec {
         r(str('[').token(:foo)[:t0] + (!str(']') + any).*[:list] + str(']'))
           { [:array, t0.line, *list.map(&:to_sym)] }
     }
-    parser.parse('[abc]')
-    assert(parser.end_idx)
-    assert_equal(parser.result[:root], [:array, 1, :a, :b, :c])
+    state = parser.parse('[abc]')
+    assert(state.end_idx)
+    assert_equal(state.result[:root], [:array, 1, :a, :b, :c])
   }
   
   it "can save a parser to a file to load and run it later": {
@@ -69,14 +69,14 @@ BasicSpec {
       rule root: (r(character.+[:clist]) { clist })[:root]
       rule character: r(any[:text]) { text.to_sym }
     }
-    parser.parse('xyz')
-    assert_equal(parser.result.fetch(:root), [:x, :y, :z])
+    state = parser.parse('xyz')
+    assert_equal(state.result.fetch(:root), [:x, :y, :z])
     parser.save_prototype("/tmp/pegleromyces_output.my.rbc")
     
     parser = new_parser
     parser.load_prototype("/tmp/pegleromyces_output.my.rbc")
-    parser.parse('xyz')
-    assert_equal(parser.result.fetch(:root), [:x, :y, :z])
+    state = parser.parse('xyz')
+    assert_equal(state.result.fetch(:root), [:x, :y, :z])
   }
   
   it "can use the Myco grammar to parse itself": {
