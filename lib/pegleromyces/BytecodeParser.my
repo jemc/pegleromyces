@@ -12,8 +12,10 @@ BytecodeParser < BasicObject {
   }
   
   var grammar: Grammar.new
+  var builder: Builder.new
   
   new_worker: set_up_worker(prototype.new)
+  new_processor: Processor.new(builder: builder)
   
   var prototype: compile_prototype
   
@@ -101,9 +103,6 @@ BytecodeParser < BasicObject {
   
   highest_idx_of_worker: |worker|
     worker.__get_ivar__(:"@highest_idx")
-  
-  new_processor: Processor.new(builder: new_builder)
-  new_builder: Builder.new
   
   
   # Match and process the given string using the current grammar
