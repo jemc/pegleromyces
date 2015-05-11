@@ -2,90 +2,34 @@
 # Implementation from central Myco repository
 # TODO: import instead of copying this code
 
-RSpecLoadOnce: Object {
-  on creation: {
-    # TODO: clean this up
-    unless(Object.send(:eval, "defined? RSpec")) {
-      Object.send(:require, 'rspec/autorun')
-      
-      # Hack to keep RSpec from trying to load Myco files as Ruby files
-      RSpec.configuration.define_singleton_method(:files_to_run) { [] }
-      
-      RSpec.configure |c| {
-        # If any tests are marked with iso:true, only run those tests
-        c.filter_run_including(iso:true)
-        c.run_all_when_everything_filtered = true
-        
-        # Abort after first failure
-        c.fail_fast = true
-        
-        # Set output formatter and enable color
-        c.formatter = 'Fivemat'
-        c.color     = true
-        
-        c.full_backtrace = true
-      }
-      
-      # This patch is ugly in part because the method is supposed to
-      # return the array of lines, but it instead prints the lines
-      # and returns an empty array.
-      # It will eventually be necessary to replace RSpec...
-      RSpec::Core::Notifications::FailedExampleNotification
-      .send(:define_method, :formatted_backtrace) {
-        STDOUT.puts(exception.awesome_backtrace.show); []
-      }
-    }
-  }
-}
-
 BasicSpec < Object {
-  assert: |arg, message="expected "arg" to be truthy"|
-    rspec.instance_eval { expect(arg && true).to(be, message) }
+  assert: |arg, message="expected "arg.inspect" to be truthy"|
+    arg || raise(message)
   
-  refute: |arg, message="expected "arg" to be falsey"|
-    rspec.instance_eval { expect(arg || false).not_to(be, message) }
+  refute: |arg, message="expected "arg.inspect" to be falsey"|
+    arg && raise(message)
   
-  assert_equal: |a, b, message=null|
-    rspec.instance_eval { expect(a).to(eq(b), message) }
+  assert_equal: |a, b, message="expected "a.inspect" to equal "b.inspect""|
+    a == b || raise(message)
   
-  refute_equal: |a, b, message=null|
-    rspec.instance_eval { expect(a).not_to(eq(b), message) }
+  refute_equal: |a, b, message="expected "a.inspect" to not equal "b.inspect""|
+    a == b && raise(message)
   
-  assert_is_a: |a, b, message=null|
-    rspec.instance_eval { expect(a).to(be_a(b), message) }
+  assert_is_a: |a, b, message="expected "a.inspect" to be a "b.inspect""|
+    a.is_a?(b) || raise(message)
   
-  skip: rspec.skip
-  
-  var rspec
+  name: to_s
   
   on creation: {
-    group = self
-    
-    group.?name && RSpec.describe(group.name) {
-      group.tests.memes.each |name, test| {
-        it(name, iso:test.metadata[:iso]) {
-          group.rspec = self
-          test.metadata[:skip] && group.rspec.skip
-          test.result
-        }
-      }
-    }
+    self.?tests && (
+      STDOUT.print(""self.name" ")
+      self.tests.memes.each |name, test| { test.result; STDOUT.print(".") }
+      STDOUT.print("\n")
+    )
   }
   
   [decorators]
   
-  it: Decorator { }
-  specify: Decorator { }
-  
-  iso: Decorator {
-    apply: |meme| {
-      meme.metadata[:iso] = true
-    }
-  }
-  
-  skip: Decorator {
-    apply: |meme| {
-      meme.metadata[:skip] = true
-    }
-  }
+  const it:      Decorator { }
+  const specify: Decorator { }
 }
