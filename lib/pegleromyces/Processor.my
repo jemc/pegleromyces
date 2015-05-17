@@ -43,7 +43,7 @@ Processor < BasicObject {
     idx_hash = ::Ruby::Hash.new
     idx_hash[0] = 0
     count = 0
-    idx = 0
+    idx = -1
     loop {
       idx = string.index("\n", idx + 1)
       idx || break
