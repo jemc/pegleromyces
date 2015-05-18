@@ -18,7 +18,13 @@ Grammar < BasicObject, Patterns::ShorthandMethods {
   # Force evaluation of the rule tree in a way that
   # doesn't get stuck in an infinite recursion.
   construct_all_rules: {
-    rules.root.construct_rule
+    # Consider all rules with "root" in the name
+    rules.memes.each |name, meme| {
+      meme.name.to_s.include?("root") && (
+        meme.result_for(rules).construct_rule
+      )
+    }
+    
     seen_keys = []
     loop {
       new_keys = rule_table.keys - seen_keys
