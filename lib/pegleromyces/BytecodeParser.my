@@ -137,7 +137,8 @@ BytecodeParser < BasicObject {
       state.error_row = pos.first
       state.error_col = pos.last
       state.error_string = \
-      "Unexpected character near line: "state.error_row", column: "state.error_col".\n" \
+      "Unexpected character with parser: "rule \
+        " near line: "state.error_row", column: "state.error_col".\n" \
         string.each_line.to_a[state.error_row - 1]"" \
         (' ' * [(state.error_col - 1), 0].max)"^"
     )
