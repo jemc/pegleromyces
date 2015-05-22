@@ -351,10 +351,10 @@ BytecodeInstructions < BasicObject {
     g.overall_fail = old_fail # reset fail
     g.goto(g.overall_fail)
     
-    # Failure => Success, backtrack index but keep captures
+    # Failure => Success, backtrack index and cannot keep captures either (incomplete)
     local_fail.set!
     g.pop_to_set_idx
-    if(inner_can_capture) { g.pop_to_accept_captures }
+    if(inner_can_capture) { g.pop_to_reject_captures }
     g.overall_fail = old_fail
   }
   
