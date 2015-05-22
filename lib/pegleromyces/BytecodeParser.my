@@ -11,7 +11,14 @@ BytecodeParser < BasicObject {
     var error_row
     var error_col
     var error_string
-    raise_error: raise(SyntaxError, error_string)
+    
+    raise_error: self.error_idx && raise(SyntaxError
+      "Unexpected character with parser: "self.rule \
+        " near line: "self.error_row \
+        ", column: "self.error_col".\n" \
+        self.string.each_line.to_a[self.error_row - 1]"" \
+        (' ' * [(self.error_col - 1), 0].max)"^"
+    )
   }
   
   var grammar: Grammar.new
@@ -110,37 +117,30 @@ BytecodeParser < BasicObject {
   
   # Match and process the given string using the current grammar
   parse: |string, rule:"root", start_idx:0| {
-    string    = string.to_s
-    rule      = rule.to_sym
-    start_idx = start_idx.to_i
-    
     worker    = new_worker
     processor = new_processor
     state     = State.new(
-      string:       string
-      start_idx:    start_idx
+      string:       string.to_s
+      rule:         rule.to_sym
+      start_idx:    start_idx.to_i
       error_idx:    null
       error_row:    null
       error_col:    null
       error_string: null
       result:       null
-      end_idx:      worker.__send__(rule, string, start_idx)
     )
     
+    state.end_idx = worker.__send__(state.rule, state.string, state.start_idx)
+    
     state.end_idx &? (
-      processor.string = string
+      processor.string = state.string
       processor.capture_items = captures_of_worker(worker)
       state.result = processor.process
     ) ?? (
       state.error_idx = highest_idx_of_worker(worker)
-      pos = processor.position_of(state.error_idx, string)
+      pos = processor.position_of(state.error_idx, state.string)
       state.error_row = pos.first
       state.error_col = pos.last
-      state.error_string = \
-      "Unexpected character with parser: "rule \
-        " near line: "state.error_row", column: "state.error_col".\n" \
-        string.each_line.to_a[state.error_row - 1]"" \
-        (' ' * [(state.error_col - 1), 0].max)"^"
     )
     state
   }
