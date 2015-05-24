@@ -78,4 +78,20 @@ BasicSpec {
     state = parser.parse('xyz')
     assert_equal(state.result.fetch(:root), [:x, :y, :z])
   }
+  
+  it "can tokenize matches using a custom tokenizer function": {
+    parser = new_parser
+    parser.grammar = Grammar {
+      tokenizer: &|type, source, start, stop| {
+        token = [type, source.slice(start, stop - start)]
+      }
+      character: any.token(:char)
+      [rules]
+      rule root: (r(character.+[:clist]) { clist })[:root]
+    }
+    state = parser.parse('xyz')
+    assert_equal(state.result.fetch(:root), [
+      [:char, "x"], [:char, "y"], [:char, "z"]
+    ])
+  }
 }

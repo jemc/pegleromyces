@@ -24,11 +24,11 @@ Processor < BasicObject {
     integer: |base=0| text.to_inum(base, true)
   }
   
-  var tokenizer: &|type, text, start, stop| {
-    pos = position_of(start, text)
+  var tokenizer: &|type, source, start, stop| {
+    pos = position_of(start, source)
     value = Token.new(
       type: type
-      text: text.slice(start, stop - start)
+      text: source.slice(start, stop - start)
       row: pos.first
       col: pos.last
     )

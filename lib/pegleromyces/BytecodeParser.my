@@ -135,6 +135,7 @@ BytecodeParser < BasicObject {
     state.end_idx &? (
       processor.string = state.string
       processor.capture_items = captures_of_worker(worker)
+      grammar.?tokenizer && (processor.tokenizer = grammar.tokenizer)
       state.result = processor.process
     ) ?? (
       state.error_idx = highest_idx_of_worker(worker)
