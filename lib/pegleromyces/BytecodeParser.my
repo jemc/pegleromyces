@@ -21,6 +21,8 @@ BytecodeParser < BasicObject {
     )
   }
   
+  static var debug_mode: false # TODO: make this flag instance-local
+  
   var grammar: Grammar.new
   var builder: Builder.new
   

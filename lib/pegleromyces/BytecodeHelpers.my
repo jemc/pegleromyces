@@ -114,7 +114,10 @@ BytecodeHelpers < BasicDecorators {
     g.local_count = 2
     g.local_names = [:subject, :idx]
     
-    # g.puts_string("trying.. "g.name"") # TODO: enable with debug flag
+    BytecodeParser.debug_mode && (
+      g.push_idx; g.inspect_top; g.pop
+      g.puts_string("trying.. "g.name"")
+    )
   }
   
   # Wrap up a compiled parser method
@@ -123,13 +126,19 @@ BytecodeHelpers < BasicDecorators {
     
     # end
     g.push_idx
-    # g.puts_string("SUCCESS! "g.name"") # TODO: enable with debug flag
+    BytecodeParser.debug_mode && (
+      g.push_idx; g.inspect_top; g.pop
+      g.puts_string("SUCCESS! "g.name"")
+    )
     g.goto(overall_done)
     
     # fail
     g.overall_fail.set!
     g.push_nil
-    # g.puts_string("failure: "g.name"") # TODO: enable with debug flag
+    BytecodeParser.debug_mode && (
+      g.push_idx; g.inspect_top; g.pop
+      g.puts_string("failure: "g.name"")
+    )
     
     overall_done.set!
     g.ret
