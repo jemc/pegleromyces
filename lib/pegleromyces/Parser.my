@@ -20,7 +20,7 @@ Parser < BasicObject {
     )
   }
   
-  static var debug_mode: false # TODO: make this flag instance-local
+  var debug_mode: false
   
   var grammar: Grammar.new
   var builder: Builder.new
@@ -46,6 +46,7 @@ Parser < BasicObject {
     
     Myco.add_dynamic_method(proto, name, "(compiled parser)") |g| {
       g.extend(BytecodeHelpers)
+      g.debug_mode = self.debug_mode
       g.rule_start
       construct.bytecode(g)
       g.rule_finish

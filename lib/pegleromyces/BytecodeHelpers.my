@@ -3,6 +3,7 @@ BytecodeHelpers < BasicDecorators {
   ##
   # Bytecode Generation Helper Methods
   
+  var debug_mode: false
   var overall_fail: new_label
   
   g: self # For consistency
@@ -114,7 +115,7 @@ BytecodeHelpers < BasicDecorators {
     g.local_count = 2
     g.local_names = [:subject, :idx]
     
-    Parser.debug_mode && (
+    g.debug_mode && (
       g.push_idx; g.inspect_top; g.pop
       g.puts_string("trying.. "g.name"")
     )
@@ -126,7 +127,7 @@ BytecodeHelpers < BasicDecorators {
     
     # end
     g.push_idx
-    Parser.debug_mode && (
+    g.debug_mode && (
       g.push_idx; g.inspect_top; g.pop
       g.puts_string("SUCCESS! "g.name"")
     )
@@ -135,7 +136,7 @@ BytecodeHelpers < BasicDecorators {
     # fail
     g.overall_fail.set!
     g.push_nil
-    Parser.debug_mode && (
+    g.debug_mode && (
       g.push_idx; g.inspect_top; g.pop
       g.puts_string("failure: "g.name"")
     )
