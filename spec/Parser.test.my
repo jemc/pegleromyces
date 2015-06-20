@@ -1,8 +1,8 @@
 
 BasicSpec {
-  name: "BytecodeParser"
+  name: "Parser"
   
-  new_parser: BytecodeParser { }
+  new_parser: Parser { }
   
   [tests]
   

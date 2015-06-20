@@ -1,5 +1,5 @@
 
-BytecodeParser < BasicObject {
+Parser < BasicObject {
   State < BasicObject {
     var string
     var start_idx

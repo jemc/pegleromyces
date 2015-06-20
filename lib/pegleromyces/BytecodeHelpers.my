@@ -114,7 +114,7 @@ BytecodeHelpers < BasicDecorators {
     g.local_count = 2
     g.local_names = [:subject, :idx]
     
-    BytecodeParser.debug_mode && (
+    Parser.debug_mode && (
       g.push_idx; g.inspect_top; g.pop
       g.puts_string("trying.. "g.name"")
     )
@@ -126,7 +126,7 @@ BytecodeHelpers < BasicDecorators {
     
     # end
     g.push_idx
-    BytecodeParser.debug_mode && (
+    Parser.debug_mode && (
       g.push_idx; g.inspect_top; g.pop
       g.puts_string("SUCCESS! "g.name"")
     )
@@ -135,7 +135,7 @@ BytecodeHelpers < BasicDecorators {
     # fail
     g.overall_fail.set!
     g.push_nil
-    BytecodeParser.debug_mode && (
+    Parser.debug_mode && (
       g.push_idx; g.inspect_top; g.pop
       g.puts_string("failure: "g.name"")
     )
