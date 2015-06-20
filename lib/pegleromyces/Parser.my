@@ -122,10 +122,6 @@ Parser < BasicObject {
       string:    string.to_s
       rule:      rule.to_sym
       start_idx: start_idx.to_i
-      error_idx: null
-      error_row: null
-      error_col: null
-      result:    null
     )
     
     state.end_idx = worker.__send__(state.rule, state.string, state.start_idx)
