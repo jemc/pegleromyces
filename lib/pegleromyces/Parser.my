@@ -23,7 +23,7 @@ Parser < BasicObject {
   var debug_mode: false
   
   var grammar: Grammar.new
-  var builder: Builder.new
+  var builder: null
   
   new_worker: set_up_worker(prototype.new)
   new_processor: Processor.new(builder: builder)
