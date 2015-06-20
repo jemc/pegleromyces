@@ -1,0 +1,45 @@
+
+String << {
+  Parser < Common::Parser {
+    State < Common::Parser::State {
+      var string
+      
+      var error_row
+      var error_col
+      
+      raise_error: self.error_idx && raise(SyntaxError
+        "Unexpected character with parser: "self.rule \
+          " near line: "self.error_row \
+          ", column: "self.error_col".\n" \
+          self.string.each_line.to_a[self.error_row - 1]"" \
+          (' ' * [(self.error_col - 1), 0].max)"^"
+      )
+    }
+    
+    # Match and process the given string using the current grammar
+    parse: |string, rule:"root", start_idx:0| {
+      worker    = new_worker
+      processor = new_processor
+      state     = State.new(
+        string:    string.to_s
+        rule:      rule.to_sym
+        start_idx: start_idx.to_i
+      )
+      
+      state.end_idx = worker.__send__(state.rule, state.string, state.start_idx)
+      
+      state.end_idx &? (
+        processor.string = state.string
+        processor.capture_items = captures_of_worker(worker)
+        grammar.?tokenizer && (processor.tokenizer = grammar.tokenizer)
+        state.result = processor.process
+      ) ?? (
+        state.error_idx = highest_idx_of_worker(worker)
+        pos = processor.position_of(state.error_idx, state.string)
+        state.error_row = pos.first
+        state.error_col = pos.last
+      )
+      state
+    }
+  }
+}

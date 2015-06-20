@@ -8,5 +8,5 @@ import 'Patterns.test.my'
 
 import 'Grammar.test.my'
 
-import 'Parser.test.my'
+import 'String/Parser.test.my'
 import 'Processor.test.my'

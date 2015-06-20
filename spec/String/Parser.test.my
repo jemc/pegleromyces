@@ -1,8 +1,8 @@
 
 BasicSpec {
-  name: "Parser"
+  name: "String::Parser"
   
-  new_parser: Parser { }
+  new_parser: String::Parser { }
   
   [tests]
   

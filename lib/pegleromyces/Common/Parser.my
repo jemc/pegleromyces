@@ -2,22 +2,15 @@
 Common << {
   Parser < BasicObject {
     State < BasicObject {
-      var string
       var start_idx
       var end_idx
       var rule
       var result
       
       var error_idx
-      var error_row
-      var error_col
       
       raise_error: self.error_idx && raise(SyntaxError
-        "Unexpected character with parser: "self.rule \
-          " near line: "self.error_row \
-          ", column: "self.error_col".\n" \
-          self.string.each_line.to_a[self.error_row - 1]"" \
-          (' ' * [(self.error_col - 1), 0].max)"^"
+        "Syntax error with parser: "self.rule" at index: "self.error_idx""
       )
     }
     
@@ -114,7 +107,9 @@ Common << {
     highest_idx_of_worker: |worker|
       worker.__get_ivar__(:"@highest_idx")
     
-    
+    parse: {
+      raise("The parse method is not implemented for "self"")
+    }
     # Match and process the given string using the current grammar
     parse: |string, rule:"root", start_idx:0| {
       worker    = new_worker
