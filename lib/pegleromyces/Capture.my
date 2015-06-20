@@ -1,0 +1,152 @@
+
+Capture < EmptyObject {
+  Patterns < EmptyObject {
+    UnaryBase < Common::Patterns::UnaryBase { }
+    
+    NamedCapture      < UnaryBase {
+      construct: Constructions::NamedCapture.new(
+        inner: inner.construct
+        captargs: [self.name]
+      )
+    }
+    NamedTextCapture  < UnaryBase {
+      construct: Constructions::NamedTextCapture.new(
+        inner: inner.construct
+        captargs: [self.name]
+      )
+    }
+    NamedTokenCapture < UnaryBase {
+      construct: Constructions::NamedTokenCapture.new(
+        inner: inner.construct
+        captargs: [self.name]
+      )
+    }
+    Reduction         < UnaryBase { var block, var args: []
+      construct: Constructions::Reduction.new(
+        inner: inner.construct
+        captargs: [self.code, *self.args]
+      )
+    }
+    
+    RuleCall          < UnaryBase { var name
+      construct: Constructions::RuleCall.new(name: name)
+    }
+  }
+  
+  Constructions < EmptyObject {
+    UnaryBase < Common::Constructions::UnaryBase { }
+    
+    NamedCapture      < UnaryBase { var captargs }
+    NamedTextCapture  < UnaryBase { var captargs }
+    NamedTokenCapture < UnaryBase { var captargs }
+    Reduction         < UnaryBase { var captargs }
+    
+    RuleCall          < UnaryBase { var name }
+  }
+  
+  Patterns << {
+    ##
+    # Reduction and associated named captures implementation
+    
+    Reduction << {
+      Environment < EmptyObject, BasicDecorators {
+        var captures # A Hash of capture names to values
+        var builder # The fallback delegate for methods that are not capture names
+        
+        method_missing: |name, *args, &block|
+          captures.fetch(name) { builder.__send__(name, *args, &block) }
+        
+        # Implement the action for the reduction in the '!' method.
+        # It will have access to the captures via method_missing.
+        "!": null
+      }
+      
+      code: block.block.compiled_code
+    }
+  }
+  
+  Constructions << {
+    UnaryBase << { const bytecode_can_capture?: true }
+    
+    NamedCapture << { bytecode: |g| {
+      Rubinius::Type.object_respond_to?(inner, :inlaid) &? (
+        inner.inlaid = &{ g.capture(:m_split, captargs) }
+        g.capture(:m_start)
+        inner.bytecode(g)
+        g.capture(:m_end, captargs)
+      ) ?? (
+        g.capture(:c_start)
+        inner.bytecode(g)
+        g.capture(:c_end, captargs)
+      )
+    }}
+    
+    NamedTextCapture << { bytecode: |g| {
+      g.capture(:s_start)
+      inner.bytecode(g)
+      g.capture(:s_end, captargs)
+    }}
+    
+    NamedTokenCapture << { bytecode: |g| {
+      g.capture(:t_start)
+      inner.bytecode(g)
+      g.capture(:t_end, captargs)
+    }}
+    
+    Reduction << { bytecode: |g| {
+      g.capture(:r_start)
+      inner.bytecode(g)
+      g.capture(:r_end, captargs)
+    }}
+    
+    RuleCall << { bytecode: |g| {
+      memoize           = true
+      result_check      = g.new_label
+      memo_result_check = g.new_label
+      local_success     = g.new_label
+      local_fail        = g.new_label
+      
+      # Push @captures onto stack and set @captures to a new empty array
+      g.push_temp_captures
+      
+      if(memoize) {
+        # Check if a memoized result exists;
+        # If one does, go straight to memo_result_check label
+        g.memo_or_eq_new_hash(name)
+        g.goto_if_memo_for_idx(name, memo_result_check)
+      }
+      
+      # Call the method; sets @captures and returns the result_idx (or nil)
+      g.push_self
+        g.push_subject
+        g.push_idx
+      g.send(name, 2)
+      
+      # Check result and memoize the result
+      result_check.set!
+      g.copy_result_to_memo(name)
+      g.dup_top
+      g.goto_if_true(local_success)
+      g.goto(local_fail)
+      
+      if(memoize) {
+        # Check result, but skip memo copy
+        memo_result_check.set!
+        g.dup_top
+        g.goto_if_true(local_success)
+        g.goto(local_fail)
+      }
+      
+      # Failure, reject index and captures
+      local_fail.set!
+      g.pop # reject idx (which is actually null here)
+      g.pop_to_reject_captures
+      g.goto(g.overall_fail)
+      
+      # Success, accept new index and captures
+      local_success.set!
+      g.pop_to_set_idx # set to the new index given by the call's return value
+      g.pop_to_accept_captures
+    }}
+  }
+}

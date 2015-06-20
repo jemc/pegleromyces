@@ -1,17 +1,5 @@
 
-Grammar < BasicObject, Patterns::ShorthandMethods {
-  
-  Rule < Patterns::UnaryBase {
-    construct_rule: inner.construct
-    construct: RuleReference.new(name:name)
-  }
-  
-  RuleReference < Constructions::UnaryBase {
-    var name
-    sequence: [[:call, name]]
-    bytecode: |m| m.call(name)
-    bytecode_can_capture: true
-  }
+Grammar < BasicObject, Common::Patterns::ShorthandMethods {
   
   var rule_table: ::Ruby::Hash.new
   
@@ -21,7 +9,7 @@ Grammar < BasicObject, Patterns::ShorthandMethods {
     # Consider all rules with "root" in the name
     rules.memes.each |name, meme| {
       meme.name.to_s.include?("root") && (
-        meme.result_for(rules).construct_rule
+        meme.result_for(rules).inner.construct
       )
     }
     
@@ -30,7 +18,7 @@ Grammar < BasicObject, Patterns::ShorthandMethods {
       new_keys = rule_table.keys - seen_keys
       new_keys.empty? && break
       new_keys.each |key| {
-        rule_table[key].construct_rule
+        rule_table[key].inner.construct
         seen_keys.push(key)
       }
     }
@@ -53,7 +41,7 @@ Grammar < BasicObject, Patterns::ShorthandMethods {
       # TODO: use some kind of Decorator#wrap mechanism instead
       meme.target.declare_meme(name, [:memoize]) {
         outer_self = self
-        rule = Rule {
+        rule = Capture::Patterns::RuleCall {
           name: name
           inner: meme.result_for(outer_self)
         }
@@ -66,5 +54,5 @@ Grammar < BasicObject, Patterns::ShorthandMethods {
   }
   
   [rules]
-  rule root: Patterns::AnyCharacter.new.*
+  rule root: String::Patterns::AnyCharacter.new.*
 }

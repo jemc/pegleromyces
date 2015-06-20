@@ -37,9 +37,9 @@ Processor < BasicObject {
   # The environment for performing reduction actions to build an AST in the PEG.
   # It gives implicit access to both local captures and AST builder methods.
   var reduction_env:
-    Patterns::Reduction::Environment.new
+    Capture::Patterns::Reduction::Environment.new
   var reduction_env_cscope:
-    ::Rubinius::ConstantScope.new(Patterns::Reduction::Environment) # TODO: fix
+    ::Rubinius::ConstantScope.new(Capture::Patterns::Reduction::Environment) # TODO: fix
   
   var cidx_stack: [] # A FILO stack of start indices for captures
   var sidx_stack: [] # A FILO stack of start indices for string captures
@@ -229,7 +229,7 @@ Processor < BasicObject {
     # Store with the string index as the key so the value can be recaptured
     value = code.invoke(
       code.name,
-      Patterns::Reduction::Environment,
+      Capture::Patterns::Reduction::Environment,
       reduction_env,
       [],
       null,

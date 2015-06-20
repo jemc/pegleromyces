@@ -1,0 +1,82 @@
+
+Common < EmptyObject {
+  Patterns < EmptyObject {
+    Base < BasicObject { var name: parent_meme.name }
+    UnaryBase  < Base { var inner }
+    BinaryBase < Base { var first, var second }
+    
+    UnaryBase << {
+      construct: construct_type.new(inner: inner.construct)
+    }
+    
+    BinaryBase << {
+      construct: construct_type.new(first: first.construct, second: second.construct)
+    }
+  }
+  
+  Constructions < EmptyObject {
+    Base < BasicObject { }
+    UnaryBase  < Base { var inner }
+    BinaryBase < Base { var first, var second }
+  }
+  
+  Constructions << {
+    Base       << { const bytecode_can_capture?: false }
+    UnaryBase  << { bytecode_can_capture?: inner.bytecode_can_capture? }
+    BinaryBase << { bytecode_can_capture?: first.bytecode_can_capture?
+                                       || second.bytecode_can_capture? }
+  }
+  
+  Patterns << {
+    ##
+    # Shorthand methods for creating primitive patterns
+    
+    ShorthandMethods < EmptyObject {
+      any:                      String::Patterns::AnyCharacter   .new
+      char:  |character|        String::Patterns::Character      .new(code:character.ord)
+      str:   |string|           String::Patterns::CharacterString.new(codes:string.each_char.map(&:ord))
+      set:   |string|           String::Patterns::CharacterSet   .new(codes:string.each_char.map(&:ord))
+      range: |start, stop|      String::Patterns::CharacterRange .new(start:start.ord, stop:stop.ord)
+      r:     |pattern, &block| Capture::Patterns::Reduction      .new(inner:pattern, block:block)
+    }
+    
+    ##
+    # Operator overloading for combining and modifying patterns.
+    #
+    # Each operation returns a new Pattern object composed of the operands
+    # so that complex grammars can be specified with relatively succint syntax.
+    
+    Base << {
+      "!":         Composite::Patterns::NegativePredicate .new(inner:self)
+      "/": |other| Composite::Patterns::OrderedChoice     .new(first:self, second:other)
+      "+": |other=false|
+        other &? Composite::Patterns::Concatenation       .new(first:self, second:other)
+              ?? Composite::Patterns::OneOrMore           .new(inner:self)
+      "-": |other=false|
+        other &? raise("binary '-' operator not implemented")
+              ?? Composite::Patterns::ZeroOrOne           .new(inner:self)
+      "*": |other=false|
+        other &? raise("binary '*' operator not implemented")
+              ?? Composite::Patterns::ZeroOrMore          .new(inner:self)
+      
+      "[]": |name| Capture::Patterns::NamedCapture        .new(inner:self, name:name)
+      text: |name=:text|
+                   Capture::Patterns::NamedTextCapture    .new(inner:self, name:name)
+      token: |name|
+                   Capture::Patterns::NamedTokenCapture   .new(inner:self, name:name)
+      
+      [private]
+      
+      # Add |other| to |orig| in a right-associative tree of type |type|
+      binary_right_assoc: |orig, other, type| {
+        cursor = orig
+        loop {
+          unless(cursor.second.is_a?(type)) { break }
+          cursor = cursor.second
+        }
+        cursor.second = type.new(first:cursor.second, second:other)
+        orig
+      }
+    }
+  }
+}

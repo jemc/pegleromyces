@@ -1,0 +1,229 @@
+
+Composite < EmptyObject {
+  Patterns < EmptyObject {
+    UnaryBase  < Common::Patterns::UnaryBase  { }
+    BinaryBase < Common::Patterns::BinaryBase { }
+    
+    NegativePredicate < UnaryBase  { construct_type: Constructions::NegativePredicate }
+    PositivePredicate < UnaryBase  { construct_type: Constructions::PositivePredicate }
+    OneOrMore         < UnaryBase  { construct_type: Constructions::OneOrMore }
+    ZeroOrOne         < UnaryBase  { construct_type: Constructions::ZeroOrOne }
+    ZeroOrMore        < UnaryBase  { construct_type: Constructions::ZeroOrMore }
+    OrderedChoice     < BinaryBase { construct_type: Constructions::OrderedChoice }
+    Concatenation     < BinaryBase { construct_type: Constructions::Concatenation }
+  }
+  
+  Constructions < EmptyObject {
+    UnaryBase  < Common::Constructions::UnaryBase  { }
+    BinaryBase < Common::Constructions::BinaryBase { }
+    
+    NegativePredicate < UnaryBase  { }
+    PositivePredicate < UnaryBase  { }
+    OneOrMore         < UnaryBase  { var inlaid }
+    ZeroOrOne         < UnaryBase  { }
+    ZeroOrMore        < UnaryBase  { var inlaid }
+    OrderedChoice     < BinaryBase { }
+    Concatenation     < BinaryBase { }
+  }
+  
+  Patterns << {
+    NegativePredicate << {
+      # Invert the polarity of the predicate instead of nesting the predicate
+      "!": PositivePredicate.new(inner:inner)
+    }
+    
+    PositivePredicate << {
+      # Invert the polarity of the predicate instead of nesting the predicate
+      "!": NegativePredicate.new(inner:inner)
+    }
+    
+    OrderedChoice << {
+      # Build a right-associative tree if the first operand of another "/"
+      "/": |other|
+        private.binary_right_assoc(self, other, OrderedChoice)
+    }
+    
+    Concatenation << {
+      # Build a right-associative tree if the first operand of another "+"
+      "+": |other=false|
+        other
+          &? private.binary_right_assoc(self, other, Concatenation)
+          ?? OneOrMore.new(inner:self)
+    }
+  }
+  
+  Constructions << {
+    # Negative matching predicate that consumes no input.
+    NegativePredicate << { bytecode: |g| {
+      local_fail = g.new_label
+      old_fail = g.overall_fail
+      g.overall_fail = local_fail
+      
+      # Store index and captures for backtracking
+      if(inner.bytecode_can_capture?) { g.push_temp_captures }
+      g.push_idx
+      
+      inner.bytecode(g)
+      
+      # Success => Failure, backtrack index and captures
+      g.pop_to_set_idx
+      if(inner.bytecode_can_capture?) { g.pop_to_reject_captures }
+      g.overall_fail = old_fail # reset fail
+      g.goto(g.overall_fail)
+      
+      # Failure => Success, backtrack index and cannot keep captures either (incomplete)
+      local_fail.set!
+      g.pop_to_set_idx
+      if(inner.bytecode_can_capture?) { g.pop_to_reject_captures }
+      g.overall_fail = old_fail
+    }}
+    
+    # Positive matching predicate that consumes no input.
+    PositivePredicate << { bytecode: |g| {
+      local_done = g.new_label
+      local_fail = g.new_label
+      old_fail = g.overall_fail
+      g.overall_fail = local_fail
+      
+      # Store index and captures for backtracking
+      if(inner.bytecode_can_capture?) { g.push_temp_captures }
+      g.push_idx
+      
+      inner.bytecode(g)
+      
+      # Success, but do not consume input, so backtrack index but keep captures
+      g.pop_to_set_idx
+      if(inner.bytecode_can_capture?) { g.pop_to_accept_captures }
+      g.overall_fail = old_fail # reset fail
+      g.goto(local_done)
+      
+      # Failure, backtrack index and captures
+      local_fail.set!
+      g.pop_to_set_idx
+      if(inner.bytecode_can_capture?) { g.pop_to_reject_captures }
+      g.overall_fail = old_fail
+      g.goto(g.overall_fail)
+      
+      local_done.set!
+    }}
+    
+    # Keep consuming |inner| until it doesn't match; it must match at least one.
+    OneOrMore << { bytecode: |g| {
+      local_retry = g.new_label
+      local_fail = g.new_label
+      old_fail = g.overall_fail
+      g.overall_fail = local_fail
+      # push a false to indicate that no matches have occurred yet
+      g.push_false
+      
+      local_retry.set!
+      
+      # Store captures for restoration
+      if(inner.bytecode_can_capture?) { g.push_temp_captures }
+      
+      inner.bytecode(g); inlaid.?call
+      
+      # Success, accept captures and try again, popping the last boolean
+      # to push a true to indicate at least one match was made.
+      if(inner.bytecode_can_capture?) { g.pop_to_accept_captures }
+      g.pop; g.push_true
+      g.goto(local_retry)
+      
+      # Failure, reject captures and continue
+      local_fail.set!
+      if(inner.bytecode_can_capture?) { g.pop_to_reject_captures }
+      g.overall_fail = old_fail # reset fail
+      
+      # If at least one match was not found, it is an overall failure
+      g.goto_if_false(g.overall_fail)
+    }}
+    
+    # Optionally match and capture from inner, or still succeed if not.
+    ZeroOrOne << { bytecode: |g| {
+      local_done = g.new_label
+      local_fail = g.new_label
+      old_fail = g.overall_fail
+      g.overall_fail = local_fail
+      
+      # Store index and captures for backtracking in case of failure
+      if(inner.bytecode_can_capture?) { g.push_temp_captures }
+      g.push_idx
+      
+      inner.bytecode(g)
+      
+      # Success, throw away backtrack entry
+      g.pop # keep idx
+      if(inner.bytecode_can_capture?) { g.pop_to_accept_captures }
+      g.overall_fail = old_fail # reset fail
+      g.goto(local_done)
+      
+      # Failure, backtrack index and captures
+      local_fail.set!
+      g.pop_to_set_idx
+      if(inner.bytecode_can_capture?) { g.pop_to_reject_captures }
+      g.overall_fail = old_fail
+      
+      local_done.set!
+    }}
+    
+    # Keep consuming |inner| until it doesn't match; it will not cause backtrack.
+    ZeroOrMore << { bytecode: |g| {
+      local_retry = g.new_label
+      local_fail = g.new_label
+      old_fail = g.overall_fail
+      g.overall_fail = local_fail
+      
+      local_retry.set!
+      
+      # Store captures for restoration
+      if(inner.bytecode_can_capture?) { g.push_temp_captures }
+      
+      inner.bytecode(g); inlaid.?call
+      
+      # Success, accept captures and try again
+      if(inner.bytecode_can_capture?) { g.pop_to_accept_captures }
+      g.goto(local_retry)
+      
+      # Failure, reject captures and continue
+      local_fail.set!
+      if(inner.bytecode_can_capture?) { g.pop_to_reject_captures }
+      g.overall_fail = old_fail # reset fail
+    }}
+    
+    # An ordered choice between first and second that matches when one succeeds.
+    OrderedChoice << { bytecode: |g| {
+      local_done = g.new_label
+      local_fail = g.new_label
+      old_fail = g.overall_fail
+      g.overall_fail = local_fail
+      
+      # Store index and captures for backtracking in case of failure
+      if(first.bytecode_can_capture?) { g.push_temp_captures }
+      g.push_idx
+      
+      first.bytecode(g)
+      
+      # Success, throw away backtrack entry
+      g.pop # keep idx
+      if(first.bytecode_can_capture?) { g.pop_to_accept_captures }
+      g.overall_fail = old_fail # reset fail
+      g.goto(local_done)
+      
+      # Failure, backtrack index and captures
+      local_fail.set!
+      g.pop_to_set_idx
+      if(first.bytecode_can_capture?) { g.pop_to_reject_captures }
+      g.overall_fail = old_fail
+      
+      second.bytecode(g)
+      
+      local_done.set!
+    }}
+    
+    # Match the first item followed by the second.
+    Concatenation << { bytecode: |g| {
+      first.bytecode(g)
+      second.bytecode(g)
+    }}
+  }
+}

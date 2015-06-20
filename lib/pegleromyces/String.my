@@ -1,0 +1,137 @@
+
+String < EmptyObject {
+  Patterns < EmptyObject {
+    Base < Common::Patterns::Base { }
+    
+    AnyCharacter    < Base {
+      construct: Constructions::AnyCharacter.new
+    }
+    Character       < Base { var code
+      construct: Constructions::Character.new(code: code)
+    }
+    CharacterString < Base { var codes
+      construct: Constructions::CharacterString.new(codes: codes)
+    }
+    CharacterSet    < Base { var codes
+      construct: Constructions::CharacterSet.new(codes: codes)
+    }
+    CharacterRange  < Base { var start, var stop
+      construct: Constructions::CharacterRange.new(start: start, stop: stop)
+    }
+  }
+  
+  Constructions < EmptyObject {
+    Base < Common::Constructions::Base { }
+    
+    AnyCharacter    < Base { }
+    Character       < Base { var code }
+    CharacterString < Base { var codes }
+    CharacterSet    < Base { var codes }
+    CharacterRange  < Base { var start, var stop }
+  }
+  
+  Constructions << {
+    AnyCharacter << { bytecode: |g| {
+      ##
+      # overall_fail! if idx == subject.size
+      # idx = idx + 1
+      
+      g.push_idx
+        g.push_subject; g.send(:size, 0)
+      g.send(:"==", 1)
+      g.goto_if_true(g.overall_fail)
+      
+      g.meta_push_1
+      g.increment_idx
+    }}
+    
+    Character << { bytecode: |g| {
+      ##
+      # overall_fail! unless chr == subject[idx]
+      # idx = idx + 1
+      
+      g.push_literal(code.chr)
+        g.push_subject_at_idx
+      g.send(:"==", 1)
+      g.goto_if_false(g.overall_fail)
+      
+      g.meta_push_1
+      g.increment_idx
+    }}
+    
+    CharacterString << { bytecode: |g| {
+      string = codes.map(&:chr).join
+      ##
+      # begin
+      #   overall_fail! unless string.compare_substring(subject, idx, string.size) == 0
+      # rescue
+      #   overall_fail!
+      # end
+      # idx = idx + string.size
+      
+      g.setup_unwind(g.overall_fail, 0)
+      
+      g.push_literal(string)
+        g.push_subject
+        g.push_idx
+        g.push_int(string.size)
+      g.send(:compare_substring, 3)
+        g.meta_push_0
+      
+      g.pop_unwind
+      
+      g.goto_if_not_equal(g.overall_fail)
+      
+      g.push_int(string.size)
+      g.increment_idx
+    }}
+    
+    CharacterSet << { bytecode: |g| {
+      string = codes.map(&:chr).join
+      ##
+      # begin
+      #   overall_fail! unless string.find_string(subject[idx], 0)
+      # rescue
+      #   overall_fail!
+      # end
+      # idx = idx + 1
+      
+      g.setup_unwind(g.overall_fail, 0)
+      
+      g.push_literal(string)
+        g.push_subject_at_idx
+        g.meta_push_0
+      g.send(:find_string, 2)
+      g.goto_if_false(g.overall_fail)
+      
+      g.pop_unwind
+      
+      g.meta_push_1
+      g.increment_idx
+    }}
+    
+    CharacterRange << { bytecode: |g| {
+      codes = Range.new(start,stop); string = codes.map(&:chr).join
+      ##
+      # begin
+      #   overall_fail! unless string.find_string(subject[idx], 0)
+      # rescue
+      #   overall_fail!
+      # end
+      # idx = idx + 1
+      
+      g.setup_unwind(g.overall_fail, 0)
+      
+      g.push_literal(string)
+        g.push_subject_at_idx
+        g.meta_push_0
+      g.send(:find_string, 2)
+      g.goto_if_false(g.overall_fail)
+      
+      g.pop_unwind
+      
+      g.meta_push_1
+      g.increment_idx
+    }}
+  }
+}

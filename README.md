@@ -1,18 +1,8 @@
 
 # Pegleromyces
 
-A runtime-mutable PEG parser for the
+An extensible PEG parser compiler for the
 [Myco programming language](https://github.com/jemc/myco).
-
-This is a design exercise to explore the weak points of the language,
-while hopefully creating a viable candidate to replace the current parser
-for the Myco interpreter with one that can be modified at runtime by user code.
-
-Like [Pegarus](https://github.com/brixen/pegarus) for Ruby,
-the implementation of Pegleromyces is based in part
-on the parsing machine described in the paper:
-["A Text Pattern-Matching Tool based on Parsing Expression Grammars"
-by Roberto Ierusalimschy.](http://www.inf.puc-rio.br/~roberto/docs/peg.pdf)
 
 ## Design Goals
 
@@ -24,12 +14,9 @@ Pegleromyces is...
 
 3. Sophisticated enough to parse the Myco language itself.
 
-4. Capable of allowing user-mutation of the grammar in between parse runs.
+4. Capable of parsing composed grammars for other languages (including user-created languages).
 
-5. Capable of parsing composed grammars for other languages (including user-created languages).
-
-6. Implemented as efficiently as possible given the above constraints.
-
+5. Implemented as efficiently as possible given the above constraints.
 
 ## The Name
 

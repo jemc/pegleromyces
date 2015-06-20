@@ -43,15 +43,12 @@ BytecodeParser < BasicObject {
   }
   
   compile_rule_into: |proto, name, rule| {
-    construct = rule.construct_rule
+    construct = rule.inner.construct
     
     Myco.add_dynamic_method(proto, name, "(compiled parser)") |g| {
-      instructor = BytecodeInstructions.new
-      instructor.g = g
       g.extend(BytecodeHelpers)
-      
       g.rule_start
-      construct.bytecode(instructor)
+      construct.bytecode(g)
       g.rule_finish
     }
   }

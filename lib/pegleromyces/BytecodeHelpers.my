@@ -152,4 +152,13 @@ BytecodeHelpers < BasicDecorators {
     item.is_a?(Array)
       &? push_literal_array(item)
       ?? push_literal(item)
+  
+  capture: |*metadata| {
+    g.push_captures
+      g.push_idx
+      g.push_literal_array(metadata)
+      g.make_array(2)
+    g.send(:push, 1)
+    g.pop
+  }
 }
