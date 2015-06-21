@@ -51,7 +51,7 @@ String < EmptyObject {
       # idx = idx + 1
       
       g.push_literal(code.chr)
-        g.push_subject_at_idx
+        g.push_subject_chr_at_idx
       g.send(:"==", 1)
       g.goto_if_false(g.overall_fail)
       
@@ -99,7 +99,7 @@ String < EmptyObject {
       g.setup_unwind(g.overall_fail, 0)
       
       g.push_literal(string)
-        g.push_subject_at_idx
+        g.push_subject_chr_at_idx
         g.meta_push_0
       g.send(:find_string, 2)
       g.goto_if_false(g.overall_fail)
@@ -123,7 +123,7 @@ String < EmptyObject {
       g.setup_unwind(g.overall_fail, 0)
       
       g.push_literal(string)
-        g.push_subject_at_idx
+        g.push_subject_chr_at_idx
         g.meta_push_0
       g.send(:find_string, 2)
       g.goto_if_false(g.overall_fail)
