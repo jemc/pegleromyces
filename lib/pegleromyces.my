@@ -3,10 +3,12 @@ import 'pegleromyces/Common.my'
 import 'pegleromyces/Capture.my'
 import 'pegleromyces/Composite.my'
 import 'pegleromyces/String.my'
+import 'pegleromyces/Stream.my'
 
 import 'pegleromyces/Grammar.my'
 
 import 'pegleromyces/BytecodeHelpers.my'
 import 'pegleromyces/Common/Parser.my'
 import 'pegleromyces/String/Parser.my'
+import 'pegleromyces/Stream/Parser.my'
 import 'pegleromyces/Processor.my'

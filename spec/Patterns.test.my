@@ -1,6 +1,6 @@
 
 BasicSpec {
-  name: "Patterns"
+  name: "Common::Patterns"
   
   new_pattern: Common::Patterns::Base { }
   var shorthand: Common::Patterns::ShorthandMethods { }
@@ -152,5 +152,11 @@ BasicSpec {
     assert_is_a(b, Capture::Patterns::Reduction)
     assert_equal(b.inner, a)
     assert_equal(b.block, a_proc)
+  }
+  
+  it "creates a Stream Item with the 'si' shorthand method": {
+    a = shorthand.si([:foo?, [], true])
+    assert_is_a(a, Stream::Patterns::Item)
+    assert_equal(a.checks, [[:foo?, [], true]])
   }
 }

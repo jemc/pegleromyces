@@ -1,0 +1,29 @@
+
+Stream << {
+  Parser < Common::Parser {
+    State < Common::Parser::State {
+      var stream
+      
+      raise_error: self.error_idx && raise(SyntaxError
+        "Unexpected item with parser: "self.rule \
+          " at index: "self.error_idx \
+          ", item: "self.stream[self.error_idx].inspect""
+      )
+    }
+    
+    # Match and process the given stream using the current grammar
+    parse: |stream, rule:"root", start_idx:0| {
+      worker    = new_worker
+      processor = new_processor
+      state     = State.new(
+        stream:    stream
+        rule:      rule.to_sym
+        start_idx: start_idx.to_i
+      )
+      
+      state.end_idx = worker.__send__(state.rule, state.stream, state.start_idx)
+      
+      state
+    }
+  }
+}

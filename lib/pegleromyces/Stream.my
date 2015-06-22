@@ -1,0 +1,66 @@
+
+Stream < EmptyObject {
+  Patterns < EmptyObject {
+    Base < Common::Patterns::Base { }
+    
+    Item < Base { var checks
+      construct: Constructions::Item.new(checks: checks)
+    }
+  }
+  
+  Constructions < EmptyObject {
+    Base < Common::Constructions::Base { }
+    
+    Item < Base { var checks }
+  }
+  
+  Constructions << {
+    Item << { bytecode: |g| {
+      many_checks = checks.size > 1
+      local_fail  = g.overall_fail
+      if(many_checks) { local_fail = g.new_label }
+      
+      g.push_subject_at_idx
+      
+      if(checks.empty?) {
+        g.goto_if_nil(local_fail)
+      }
+      
+      checks.each |method, args, result| {
+        if(many_checks) { g.dup_top }
+        
+        unless(:self.equal?(method)) {
+          args.each |arg| { g.push_literal_or_array(arg) }
+          g.send(method, args.size)
+        }
+        
+        result == null &? (
+          g.goto_if_not_nil(local_fail)
+        ) ?? ((false.equal?(result) || true.equal?(result) ||
+               result.is_a?(Symbol) || result.is_a?(Fixnum)) &? (
+          g.push_literal(result)
+          g.goto_if_not_equal(local_fail)
+        ) ?? (
+          g.push_literal_or_array(result)
+          g.send(:"==", 1)
+          g.goto_if_false(local_fail)
+        ))
+      }
+      
+      if(many_checks) {
+        local_done = g.new_label
+        g.pop # The dup'd subject_at_idx
+        g.goto(local_done)
+        
+        local_fail.set!
+        g.pop # The dup'd subject_at_idx
+        g.goto(g.overall_fail)
+        
+        local_done.set!
+      }
+      
+      g.meta_push_1
+      g.increment_idx
+    }}
+  }
+}

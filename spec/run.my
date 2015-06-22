@@ -9,4 +9,6 @@ import 'Patterns.test.my'
 import 'Grammar.test.my'
 
 import 'String/Parser.test.my'
+import 'Stream/Parser.test.my'
+import 'Stream/Patterns.test.my'
 import 'Processor.test.my'

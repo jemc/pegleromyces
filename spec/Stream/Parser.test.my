@@ -1,0 +1,19 @@
+
+BasicSpec {
+  name: "Stream::Parser"
+  
+  new_parser: Stream::Parser.new
+  
+  [tests]
+  
+  it "can match from a minimal grammar": {
+    parser = new_parser
+    parser.grammar = Grammar {
+      [rules]
+      rule root: si.+
+    }
+    state = parser.parse([:x, :y, :z])
+    assert_equal(state.end_idx, 3)
+  }
+  
+}

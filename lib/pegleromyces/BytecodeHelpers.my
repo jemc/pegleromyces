@@ -35,6 +35,9 @@ BytecodeHelpers < BasicDecorators {
   pop_to_accept_captures:
     g.push_captures; g.send(:concat, 1); g.set_captures; g.pop
   
+  push_subject_at_idx:
+    g.push_subject; g.push_idx; g.send(:at, 1)
+  
   push_subject_chr_at_idx:
     g.push_subject; g.push_idx; g.send(:chr_at, 1)
   

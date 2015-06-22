@@ -2,7 +2,7 @@
 BasicSpec {
   name: "String::Parser"
   
-  new_parser: String::Parser { }
+  new_parser: String::Parser.new
   
   [tests]
   

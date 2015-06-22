@@ -38,6 +38,7 @@ Common < EmptyObject {
       set:   |string|           String::Patterns::CharacterSet   .new(codes:string.each_char.map(&:ord))
       range: |start, stop|      String::Patterns::CharacterRange .new(start:start.ord, stop:stop.ord)
       r:     |pattern, &block| Capture::Patterns::Reduction      .new(inner:pattern, block:block)
+      si:    |*checks|          Stream::Patterns::Item           .new(checks:checks)
     }
     
     ##

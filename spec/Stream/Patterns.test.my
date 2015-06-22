@@ -1,0 +1,112 @@
+
+BasicSpec {
+  name: "Stream::Patterns"
+  
+  new_parser: Stream::Parser.new
+  
+  var shorthand: Common::Patterns::ShorthandMethods { }
+  si: |*args| shorthand.si(*args)
+  
+  match?: |pattern, *items| {
+    parser = new_parser
+    parser.grammar = Grammar {
+      [rules]
+      rule root: pattern
+    }
+    state = parser.parse(items)
+    state.end_idx == items.size
+  }
+  
+  assert_match: |pattern, *items| assert(
+    match?(pattern, *items)
+    "Expected "pattern.inspect" to match "items.inspect"."
+  )
+  
+  refute_match: |pattern, *items| assert(
+    !match?(pattern, *items)
+    "Expected "pattern.inspect" not to match "items.inspect"."
+  )
+  
+  var test_item: BasicObject {
+    return_true:   true
+    return_false:  false
+    return_null:   null
+    return_88:     88
+    return_99:     99
+    return_foo:    :foo
+    return_bar:    :bar
+    return_foo_s:  "foo"
+    return_bar_s:  "bar"
+    return_object: BasicObject.new
+    first_arg:  |*a| a[0]
+    second_arg: |*a| a[1]
+    third_arg:  |*a| a[2]
+  }
+  
+  [tests]
+  
+  "no checks implies non-null": {
+    si |> assert_match(test_item)
+    si |> assert_match(true)
+    si |> assert_match(false)
+    si |> refute_match(null)
+    si |> assert_match(88)
+    si |> assert_match(99)
+    si |> assert_match(:foo)
+    si |> assert_match(:bar)
+    si |> assert_match("foo")
+    si |> assert_match("bar")
+  }
+  
+  "single check with no arguments for literal result": {
+    si([:return_true,   [], true ]) |> assert_match(test_item)
+    si([:return_false,  [], false]) |> assert_match(test_item)
+    si([:return_null,   [], null ]) |> assert_match(test_item)
+    si([:return_88,     [], 88   ]) |> assert_match(test_item)
+    si([:return_99,     [], 99   ]) |> assert_match(test_item)
+    si([:return_foo,    [], :foo ]) |> assert_match(test_item)
+    si([:return_bar,    [], :bar ]) |> assert_match(test_item)
+    si([:return_false,  [], true ]) |> refute_match(test_item)
+    si([:return_null,   [], true ]) |> refute_match(test_item)
+    si([:return_88,     [], true ]) |> refute_match(test_item)
+    si([:return_null,   [], false]) |> refute_match(test_item)
+    si([:return_false,  [], null ]) |> refute_match(test_item)
+    si([:return_88,     [], 99   ]) |> refute_match(test_item)
+    si([:return_99,     [], 88   ]) |> refute_match(test_item)
+    si([:return_foo,    [], :bar ]) |> refute_match(test_item)
+    si([:return_bar,    [], :foo ]) |> refute_match(test_item)
+    si([:return_object, [], true ]) |> refute_match(test_item)
+    si([:return_object, [], false]) |> refute_match(test_item)
+    si([:return_object, [], null ]) |> refute_match(test_item)
+  }
+  
+  "single check with no arguments for nonliteral result": {
+    si([:return_foo_s,  [], "foo"]) |> assert_match(test_item)
+    si([:return_bar_s,  [], "bar"]) |> assert_match(test_item)
+    si([:return_foo_s,  [], "bar"]) |> refute_match(test_item)
+    si([:return_bar_s,  [], "foo"]) |> refute_match(test_item)
+    si([:return_true,   [], "bar"]) |> refute_match(test_item)
+    si([:return_false,  [], "bar"]) |> refute_match(test_item)
+    si([:return_null,   [], "bar"]) |> refute_match(test_item)
+    si([:return_88,     [], "bar"]) |> refute_match(test_item)
+    si([:return_99,     [], "bar"]) |> refute_match(test_item)
+    si([:return_object, [], "bar"]) |> refute_match(test_item)
+    si([:return_object, [], test_item.return_object]) |> refute_match(test_item)
+  }
+  
+  "single check with arguments": {
+    si([:first_arg,  [:x,"y",3], :x   ]) |> assert_match(test_item)
+    si([:second_arg, [:x,"y",3], "y"  ]) |> assert_match(test_item)
+    si([:third_arg,  [:x,"y",3],  3   ]) |> assert_match(test_item)
+    si([:first_arg,  [:x,"y",3], true ]) |> refute_match(test_item)
+    si([:second_arg, [:x,"y",3], false]) |> refute_match(test_item)
+    si([:third_arg,  [:x,"y",3], null ]) |> refute_match(test_item)
+  }
+  
+  "multiple checks": {
+    si([:return_true, [], true],  [:first_arg, [:x,"y",3], :x]) |> assert_match(test_item)
+    si([:return_true, [], false], [:first_arg, [:x,"y",3], :x]) |> refute_match(test_item)
+    si([:return_true, [], true],  [:first_arg, [:x,"y",3], 88]) |> refute_match(test_item)
+    si([:return_true, [], false], [:first_arg, [:x,"y",3], 88]) |> refute_match(test_item)
+  }
+}
