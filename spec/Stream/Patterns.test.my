@@ -45,11 +45,11 @@ BasicSpec {
   
   [tests]
   
-  "no checks implies non-null": {
+  "no checks": {
     si |> assert_match(test_item)
     si |> assert_match(true)
     si |> assert_match(false)
-    si |> refute_match(null)
+    si |> assert_match(null)
     si |> assert_match(88)
     si |> assert_match(99)
     si |> assert_match(:foo)
