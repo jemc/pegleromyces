@@ -23,6 +23,14 @@ Stream << {
       
       state.end_idx = worker.__send__(state.rule, state.stream, state.start_idx)
       
+      state.end_idx &? (
+        processor.string = state.stream
+        processor.capture_items = captures_of_worker(worker)
+        grammar.?tokenizer && (processor.tokenizer = grammar.tokenizer)
+        state.result = processor.process
+      ) ?? (
+        state.error_idx = highest_idx_of_worker(worker)
+      )
       state
     }
   }
