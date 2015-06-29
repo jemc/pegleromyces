@@ -109,4 +109,16 @@ BasicSpec {
     si([:return_true, [], true],  [:first_arg, [:x,"y",3], 88]) |> refute_match(test_item)
     si([:return_true, [], false], [:first_arg, [:x,"y",3], 88]) |> refute_match(test_item)
   }
+  
+  "with :self as check method, checks the item directly against the result": {
+    si([:self, [], 88]) |> assert_match(88)
+    si([:self, [], 99]) |> refute_match(88)
+  }
+  
+  "with block literal as check method, runs the block with the item as self": {
+    si([&{ self.return_88 }, [], 88]) |> assert_match(test_item)
+    si([&{ self.return_99 }, [], 88]) |> refute_match(test_item)
+    si([&|a,b,c|{ self.return_88 + (a * b) - c }, [2,3,4], 90]) |> assert_match(test_item)
+    si([&|a,b,c|{ self.return_99 + (a * b) - c }, [2,3,4], 90]) |> refute_match(test_item)
+  }
 }

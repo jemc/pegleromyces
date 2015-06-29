@@ -34,12 +34,27 @@ Stream < EmptyObject {
         checks.each |method, args, result| {
           if(many_checks) { g.dup_top }
           
-          unless(:self.equal?(method)) {
+          # Run the given method (or other check) with the given args (if applicable) 
+          :self.equal?(method) &? (
+            # Do nothing; let the self pass through to result checking.
+          ) ?? (method.is_a?(Symbol) &? (
             args.each |arg| { g.push_literal_or_array(arg) }
             g.send(method, args.size)
-          }
+          ) ?? (method.is_a?(Proc) &? (
+            code = method.block.compiled_code
+            g.push_literal(code) # TODO: add a move_up instruction and avoid all of these swap_stacks
+              g.swap_stack; g.push_literal(code.name)             # name
+              g.swap_stack; g.push_cpath_top; g.find_const(:Myco) # module
+              g.swap_stack                                        # receiver (the item)
+              g.push_literal_array(args)                          # args
+              g.push_nil                                          # block
+            g.send(:invoke, 5)
+          ) ?? (
+            raise("Unknown type of check method: "method"")
+          )))
           
-          result == null &? (
+          # Compare the result of the check with the given expected result 
+          null.equal?(result) &? (
             g.goto_if_not_nil(local_fail)
           ) ?? ((false.equal?(result) || true.equal?(result) ||
                  result.is_a?(Symbol) || result.is_a?(Fixnum)) &? (
