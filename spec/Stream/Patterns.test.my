@@ -5,7 +5,8 @@ BasicSpec {
   new_parser: Stream::Parser.new
   
   var shorthand: Common::Patterns::ShorthandMethods { }
-  si: |*args| shorthand.si(*args)
+  si:  |*args| shorthand.si(*args)
+  esi: |*args| shorthand.esi(*args)
   
   match?: |pattern, *items| {
     parser = new_parser
@@ -120,5 +121,11 @@ BasicSpec {
     si([&{ self.return_99 }, [], 88]) |> refute_match(test_item)
     si([&|a,b,c|{ self.return_88 + (a * b) - c }, [2,3,4], 90]) |> assert_match(test_item)
     si([&|a,b,c|{ self.return_99 + (a * b) - c }, [2,3,4], 90]) |> refute_match(test_item)
+  }
+  
+  "end of stream pattern": {
+    esi |> assert_match()
+    esi |> refute_match(test_item)
+    esi |> refute_match(test_item, test_item)
   }
 }

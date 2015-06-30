@@ -3,6 +3,9 @@ Stream < EmptyObject {
   Patterns < EmptyObject {
     Base < Common::Patterns::Base { }
     
+    End  < Base {
+      construct: Constructions::End.new
+    }
     Item < Base { var checks
       construct: Constructions::Item.new(checks: checks)
     }
@@ -11,10 +14,19 @@ Stream < EmptyObject {
   Constructions < EmptyObject {
     Base < Common::Constructions::Base { }
     
+    End  < Base { }
     Item < Base { var checks }
   }
   
   Constructions << {
+    End << { bytecode: |g| {
+      # Just verify the index is NOT within range
+      g.push_subject; g.send(:size, 0)
+        g.push_idx
+      g.send(:">", 1)
+      g.goto_if_true(g.overall_fail)
+    }}
+    
     Item << { bytecode: |g| {
       many_checks = checks.size > 1
       local_fail  = g.overall_fail
