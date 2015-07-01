@@ -220,10 +220,14 @@ Processor < BasicObject {
     captures = pop_layer
     start_idx = ridx_stack.pop
     
+    captures_map = captures.map |k,v| {
+      k.is_a?(Symbol) &? [k,v.last] ?? null
+    }.compact.to_h
+    
     # Set up the reduction environment
     code.scope = reduction_env_cscope
     reduction_env.builder = builder
-    reduction_env.captures = captures.map |k,v| { [k,v.last] }.to_h
+    reduction_env.captures = captures_map
     
     # Invoke the reduction action to get a value
     # Store with the string index as the key so the value can be recaptured
