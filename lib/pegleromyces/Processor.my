@@ -126,7 +126,8 @@ Processor < BasicObject {
     # If the reduction is not found and the string length is not zero
     # slice the string with the given indices to get a text value.
     !use_reduction && !(start_idx==idx) && (
-      value = string.slice(start_idx, idx-start_idx)
+      size = idx-start_idx
+      value = (size == 1 &? string[start_idx] ?? string.slice(start_idx, size))
     )
     
     store_value = [[start_idx, idx], value]

@@ -26,4 +26,14 @@ BasicSpec {
     assert_equal(state.result[:root], 'x.y.z')
   }
   
+  it "captures individual items for single-item captures": {
+    parser = new_parser
+    parser.grammar = Grammar {
+      [rules]
+      rule root: r(si[:a] + si[:b] + si.+[:rest]) { [a, b, rest] }[:root]
+    }
+    state = parser.parse([:x, :y, :z])
+    assert_equal(state.result[:root], [:x, :y, [:z]])
+  }
+  
 }
