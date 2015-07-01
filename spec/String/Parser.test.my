@@ -46,6 +46,27 @@ BasicSpec {
     assert_equal(state.end_idx, 3)
   }
   
+  it "exposes captures in the reduction environment": {
+    parser = new_parser
+    parser.grammar = Grammar {
+      [rules]
+      rule root: abc[:root]
+      
+      rule a: str('a')[:a]
+      rule b: str('b')[:b]
+      rule c: str('c')[:c]
+      
+      rule abc: r(a+b+c) {[
+        [captures[:a],captures[:b],captures[:c]]
+        [a,b,c]
+      ]}
+    }
+    state = parser.parse('abc')
+    assert(state.end_idx)
+    assert_equal(state.result[:root].first, ["a","b","c"])
+    assert_equal(state.result[:root].last,  ["a","b","c"])
+  }
+  
   it "skips memoized rule calls without result corruption": {
     parser = new_parser
     parser.grammar = Grammar {
