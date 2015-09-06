@@ -32,13 +32,13 @@ Stream < EmptyObject {
       local_fail  = g.overall_fail
       if(many_checks) { local_fail = g.new_label }
       
-      checks.empty? &? (
-        # If no explicit checks are present, just verify the index is within range
-        g.push_subject; g.send(:size, 0)
-          g.push_idx
-        g.send(:">", 1)
-        g.goto_if_false(local_fail)
-      ) ?? (
+      # First, verify the index is within range
+      g.push_subject; g.send(:size, 0)
+        g.push_idx
+      g.send(:">", 1)
+      g.goto_if_false(g.overall_fail)
+      
+      checks.empty? || (
         # Retrieve the item
         g.push_subject_at_idx
         

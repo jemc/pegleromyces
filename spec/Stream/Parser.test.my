@@ -16,6 +16,16 @@ BasicSpec {
     assert_equal(state.end_idx, 3)
   }
   
+  it "can match from a minimal grammar with rules in the stream items": {
+    parser = new_parser
+    parser.grammar = Grammar {
+      [rules]
+      rule root: si([:to_sym, [], :x]).+
+    }
+    state = parser.parse([:x, :x, :x])
+    assert_equal(state.end_idx, 3)
+  }
+  
   it "can create a result from reductions": {
     parser = new_parser
     parser.grammar = Grammar {
