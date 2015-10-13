@@ -59,6 +59,17 @@ String < EmptyObject {
       g.increment_idx
     }}
     
+    # TODO: get rid of this ugly hack.
+    STRING_HACK_PATCH: Ruby.eval("
+      class ::String
+        def compare_substring_safe(*args)
+          compare_substring(*args)
+        rescue Exception
+          nil
+        end
+      end
+    ")
+    
     CharacterString << { bytecode: |g| {
       string = codes.map(&:chr).join
       ##
@@ -69,16 +80,12 @@ String < EmptyObject {
       # end
       # idx = idx + string.size
       
-      g.setup_unwind(g.overall_fail, 0)
-      
       g.push_literal(string)
         g.push_subject
         g.push_idx
         g.push_int(string.size)
-      g.send(:compare_substring, 3)
+      g.send(:compare_substring_safe, 3)
         g.meta_push_0
-      
-      g.pop_unwind
       
       g.goto_if_not_equal(g.overall_fail)
       
