@@ -89,22 +89,18 @@ String < EmptyObject {
     CharacterSet << { bytecode: |g| {
       string = codes.map(&:chr).join
       ##
-      # begin
-      #   overall_fail! unless string.find_string(subject[idx], 0)
-      # rescue
-      #   overall_fail!
-      # end
+      # overall_fail! unless subject[idx]
+      # overall_fail! unless string.find_string(subject[idx], 0)
       # idx = idx + 1
       
-      g.setup_unwind(g.overall_fail, 0)
+      g.push_subject_chr_at_idx
+      g.goto_if_nil(g.overall_fail) # TODO: avoid second lookup using register instructions
       
       g.push_literal(string)
         g.push_subject_chr_at_idx
         g.meta_push_0
       g.send(:find_string, 2)
       g.goto_if_false(g.overall_fail)
-      
-      g.pop_unwind
       
       g.meta_push_1
       g.increment_idx
@@ -113,22 +109,18 @@ String < EmptyObject {
     CharacterRange << { bytecode: |g| {
       codes = Range.new(start,stop); string = codes.map(&:chr).join
       ##
-      # begin
-      #   overall_fail! unless string.find_string(subject[idx], 0)
-      # rescue
-      #   overall_fail!
-      # end
+      # overall_fail! unless subject[idx]
+      # overall_fail! unless string.find_string(subject[idx], 0)
       # idx = idx + 1
       
-      g.setup_unwind(g.overall_fail, 0)
+      g.push_subject_chr_at_idx
+      g.goto_if_nil(g.overall_fail) # TODO: avoid second lookup using register instructions
       
       g.push_literal(string)
         g.push_subject_chr_at_idx
         g.meta_push_0
       g.send(:find_string, 2)
       g.goto_if_false(g.overall_fail)
-      
-      g.pop_unwind
       
       g.meta_push_1
       g.increment_idx
