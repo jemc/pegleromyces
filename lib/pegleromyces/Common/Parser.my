@@ -136,4 +136,20 @@ Common << {
       state
     }
   }
+  
+  Parser << {
+    # Find the first occurrence of the pattern that can be matched,
+    # (not necessarily starting at index zero).
+    # Returns the Parser::State, or null if no occurrences were found.
+    find: |subject, start_idx: 0, **kwargs| {
+      result = null
+      Loop.run {
+        start_idx >= subject.size && Loop.break
+        state = parse(subject, kwargs.merge(start_idx: start_idx))
+        state.end_idx && (result = state; Loop.break)
+        start_idx = start_idx + 1
+      }
+      result
+    }
+  }
 }

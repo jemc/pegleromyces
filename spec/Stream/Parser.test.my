@@ -46,4 +46,25 @@ BasicSpec {
     assert_equal(state.result[:root], [:x, :y, [:z]])
   }
   
+  it "can find the first occurrence": {
+    parser = new_parser
+    parser.grammar = Grammar {
+      [rules]
+      rule root: si([:to_sym, [], :y]).+
+    }
+    state = parser.find([:x, :x, :y, :y, :z, :z, :y, :y, :x, :x])
+    assert_equal(state.start_idx, 2)
+    assert_equal(state.end_idx, 4)
+  }
+  
+  it "can find the next occurrence": {
+    parser = new_parser
+    parser.grammar = Grammar {
+      [rules]
+      rule root: si([:to_sym, [], :y]).+
+    }
+    state = parser.find([:x, :x, :y, :y, :z, :z, :y, :y, :x, :x], start_idx: 4)
+    assert_equal(state.start_idx, 6)
+    assert_equal(state.end_idx, 8)
+  }
 }
