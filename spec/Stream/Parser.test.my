@@ -67,4 +67,32 @@ BasicSpec {
     assert_equal(state.start_idx, 6)
     assert_equal(state.end_idx, 8)
   }
+  
+  it "can scan the occurrences": {
+    parser = new_parser
+    parser.grammar = Grammar {
+      [rules]
+      rule root: si([:to_sym, [], :y]).+
+    }
+    states = parser.scan([:x, :x, :y, :y, :z, :z, :y, :y, :x, :x])
+    assert_equal(states.size, 2)
+    assert_equal(states[0].start_idx, 2)
+    assert_equal(states[0].end_idx, 4)
+    assert_equal(states[1].start_idx, 6)
+    assert_equal(states[1].end_idx, 8)
+  }
+  
+  it "can scan the next occurrences": {
+    parser = new_parser
+    parser.grammar = Grammar {
+      [rules]
+      rule root: si([:to_sym, [], :y]).+
+    }
+    states = parser.scan([:x, :x, :y, :y, :z, :z, :y, :y, :x, :x], start_idx: 3)
+    assert_equal(states.size, 2)
+    assert_equal(states[0].start_idx, 3)
+    assert_equal(states[0].end_idx, 4)
+    assert_equal(states[1].start_idx, 6)
+    assert_equal(states[1].end_idx, 8)
+  }
 }

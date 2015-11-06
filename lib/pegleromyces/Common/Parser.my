@@ -151,5 +151,19 @@ Common << {
       }
       result
     }
+    
+    # Find each non-overlapping occurrence of the pattern that can be matched,
+    # starting with the first occurrence as found by the find method.
+    # Returns the array of Parser::State objects that were found.
+    scan: |subject, start_idx: 0, **kwargs| {
+      [].tap |result| {
+        Loop.run {
+          state = find(subject, kwargs.merge(start_idx: start_idx))
+          state || Loop.break
+          start_idx = state.end_idx
+          result.push(state)
+        }
+      }
+    }
   }
 }
