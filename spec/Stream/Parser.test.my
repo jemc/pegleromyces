@@ -95,4 +95,18 @@ BasicSpec {
     assert_equal(states[1].start_idx, 6)
     assert_equal(states[1].end_idx, 8)
   }
+  
+  it "can scan and replace the occurrences": {
+    parser = new_parser
+    parser.grammar = Grammar {
+      [rules]
+      rule ys:   si([:to_sym, [], :y]).+
+      rule ys2Y: r(ys) { :Y }
+      rule root: ys2Y[:root]
+    }
+    assert_equal(
+      parser.scan_replace([:x, :x, :y, :y, :z, :z, :y, :y, :x, :x])
+                          [:x, :x,   :Y,   :z, :z,   :Y,   :x, :x]
+    )
+  }
 }

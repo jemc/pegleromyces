@@ -165,5 +165,21 @@ Common << {
         }
       }
     }
+    
+    # For each scan result, replace the matched part with the rule result.
+    # Returns the copied subject with replacements performed.
+    scan_replace: |subject, start_idx: 0, rule: "root", **kwargs| {
+      subject.class.new.tap |result| {
+        rule = rule.to_sym
+        scan(subject).each |state| {
+          range = Range.new(start_idx, state.start_idx, true)
+          result.concat(subject.slice(range))
+          result.send(:"<<", state.result[rule])
+          start_idx = state.end_idx
+        }
+        range = Range.new(start_idx, subject.size, true)
+        result.concat(subject.slice(range))
+      }
+    }
   }
 }
