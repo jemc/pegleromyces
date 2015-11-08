@@ -171,7 +171,9 @@ Common << {
     scan_replace: |subject, start_idx: 0, rule: "root", **kwargs| {
       subject.class.new.tap |result| {
         rule = rule.to_sym
-        scan(subject).each |state| {
+        kwargs = kwargs.merge(start_idx: start_idx, rule: rule)
+        start_idx = 0 # always return the entire array
+        scan(subject, kwargs).each |state| {
           range = Range.new(start_idx, state.start_idx, true)
           result.concat(subject.slice(range))
           result.send(:"<<", state.result[rule])

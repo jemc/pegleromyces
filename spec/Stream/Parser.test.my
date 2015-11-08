@@ -109,4 +109,19 @@ BasicSpec {
                           [:x, :x,   :Y,   :z, :z,   :Y,   :x, :x]
     )
   }
+  
+  it "can scan and replace the occurrences with a given rule and start_idx": {
+    parser = new_parser
+    parser.grammar = Grammar {
+      [rules]
+      rule ys:   si([:to_sym, [], :y]).+
+      rule ys2Y: r(ys) { :Y }
+      rule alt_root: ys2Y[:alt_root]
+    }
+    assert_equal(
+      parser.scan_replace([:x, :x, :y, :y, :z, :z, :y, :y, :x, :x]
+                          start_idx: 3, rule: "alt_root")
+                          [:x, :x, :y, :Y, :z, :z,   :Y,   :x, :x]
+    )
+  }
 }

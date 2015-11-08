@@ -181,4 +181,18 @@ BasicSpec {
                            'xxYzzYxx'
     )
   }
+  
+  it "can scan and replace the occurrences with a given rule and start_idx": {
+    parser = new_parser
+    parser.grammar = Grammar {
+      [rules]
+      rule ys:   str('y').+
+      rule ys2Y: r(ys) { 'Y' }
+      rule alt_root: ys2Y[:alt_root]
+    }
+    assert_equal(
+      parser.scan_replace('xxyyzzyyxx', start_idx: 3, rule: "alt_root")
+                          'xxyYzzYxx'
+    )
+  }
 }
